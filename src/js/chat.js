@@ -1,20 +1,20 @@
 /**
- * chat.js
- * ─────────────────────────────────────────────────────────────
- * Powers both the inline section demo and the floating bubble.
+ * chat.js — RAG-first chatbot, no paid API required.
  *
- * PRODUCTION NOTE:
- *   The Anthropic API is called directly from the browser here
- *   for demo purposes. Before going live, proxy through your
- *   backend so the API key is not exposed client-side.
- *   See docs/DEPLOYMENT.md for the Django proxy setup.
- * ─────────────────────────────────────────────────────────────
+ * Flow:
+ *   1. Search local knowledge base (rag-kb.js) — keyword match
+ *   2. If good match found → return directly (zero API cost)
+ *   3. If no match → call Cloudflare Workers AI (free tier)
+ *      or fall back to a helpful "contact us" message
  */
-import { SYSTEM_PROMPT } from './chatPrompt.js';
+import { searchKB } from './rag-kb.js';
 
-const FALLBACK = 'Mi dispiace, si è verificato un errore. / Something went wrong — try again or email talumaflow@gmail.com';
+const FALLBACK = `Non ho una risposta specifica per questa domanda. / I don't have a specific answer for that. Please contact us directly:\n\n📧 talumaflow@gmail.com\n📱 +39 328 9741517`;
 
-/* ── Helpers ─────────────────────────────────────────────── */
+// Your Cloudflare Workers AI endpoint (set up once — see docs/DEPLOYMENT.md)
+// Leave empty to use KB-only mode with no external API calls
+const CF_WORKER_URL = '';
+
 function timeStr() {
   return new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
 }
@@ -22,7 +22,9 @@ function timeStr() {
 function appendMsg(container, role, text) {
   const div = document.createElement('div');
   div.className = `msg ${role}`;
-  const safe = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+  const safe = text
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/\n/g,'<br>');
   div.innerHTML = `<div class="msg-bubble">${safe}</div><div class="msg-time">${timeStr()}</div>`;
   container.appendChild(div);
   container.scrollTop = container.scrollHeight;
@@ -41,16 +43,28 @@ function showTyping(container) {
   return el;
 }
 
-async function callAI(messages) {
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 1000, system: SYSTEM_PROMPT, messages }),
-  });
-  if (!res.ok) throw new Error(`API ${res.status}`);
-  const data = await res.json();
-  if (!data.content?.[0]?.text) throw new Error('Empty response');
-  return data.content[0].text;
+async function getAnswer(query, history) {
+  // Step 1 — search local knowledge base first (free, instant)
+  const kbAnswer = searchKB(query);
+  if (kbAnswer) return kbAnswer;
+
+  // Step 2 — call Cloudflare Workers AI if configured (free tier)
+  if (CF_WORKER_URL) {
+    try {
+      const res = await fetch(CF_WORKER_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query, history }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        return data.answer || FALLBACK;
+      }
+    } catch { /* fall through */ }
+  }
+
+  // Step 3 — graceful fallback
+  return FALLBACK;
 }
 
 /* ── Inline section chat ─────────────────────────────────── */
@@ -68,22 +82,19 @@ export function initInlineChat({ inputId, sendBtnId, messagesId, typingId }) {
     if (!text) return;
     input.value = ''; sendBtn.disabled = true;
     appendMsg(msgs, 'user', text);
-    inlineHistory.push({ role: 'user', content: text });
     if (typing) typing.style.display = 'flex';
-    try {
-      const reply = await callAI(inlineHistory);
-      if (typing) typing.style.display = 'none';
-      inlineHistory.push({ role: 'assistant', content: reply });
-      appendMsg(msgs, 'bot', reply);
-    } catch {
-      if (typing) typing.style.display = 'none';
-      appendMsg(msgs, 'bot', FALLBACK);
-    }
+    const reply = await getAnswer(text, inlineHistory);
+    if (typing) typing.style.display = 'none';
+    inlineHistory.push({ role: 'user', content: text });
+    inlineHistory.push({ role: 'assistant', content: reply });
+    appendMsg(msgs, 'bot', reply);
     sendBtn.disabled = false; input.focus();
   }
 
   sendBtn.addEventListener('click', send);
-  input.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } });
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+  });
 }
 
 /* ── Floating bubble chat ────────────────────────────────── */
@@ -100,8 +111,6 @@ export function initFloatChat({ panelId, btnId, inputId, sendBtnId, messagesId }
   btn.addEventListener('click', () => {
     const open = panel.classList.toggle('open');
     btn.classList.toggle('open', open);
-    btn.setAttribute('aria-expanded', open);
-    panel.setAttribute('aria-hidden', !open);
     if (open) setTimeout(() => input.focus(), 300);
   });
 
@@ -110,20 +119,17 @@ export function initFloatChat({ panelId, btnId, inputId, sendBtnId, messagesId }
     if (!text) return;
     input.value = ''; sendBtn.disabled = true;
     appendMsg(msgs, 'user', text);
-    floatHistory.push({ role: 'user', content: text });
     const typingEl = showTyping(msgs);
-    try {
-      const reply = await callAI(floatHistory);
-      msgs.removeChild(typingEl);
-      floatHistory.push({ role: 'assistant', content: reply });
-      appendMsg(msgs, 'bot', reply);
-    } catch {
-      msgs.removeChild(typingEl);
-      appendMsg(msgs, 'bot', FALLBACK);
-    }
+    const reply = await getAnswer(text, floatHistory);
+    msgs.removeChild(typingEl);
+    floatHistory.push({ role: 'user', content: text });
+    floatHistory.push({ role: 'assistant', content: reply });
+    appendMsg(msgs, 'bot', reply);
     sendBtn.disabled = false; input.focus();
   }
 
   sendBtn.addEventListener('click', send);
-  input.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } });
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+  });
 }
