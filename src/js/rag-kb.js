@@ -1,140 +1,199 @@
 /**
  * rag-kb.js — TaalumaFlow knowledge base
- * Answers are formatted with line breaks for chat readability.
- * Add entries to KB array to expand knowledge — no code changes needed.
+ *
+ * Same structure as TaalumaERP's engine.py KB.
+ * Each entry has `questions` (used to build the semantic index)
+ * and an `answer` (returned when a question matches).
+ *
+ * To expand: add more objects to KB. No code changes needed.
  */
-
 export const KB = [
   {
-    keywords: [
-      'get started', 'start', 'inizia', 'begin', 'how do i', 'come posso',
-      'first step', 'primo passo', 'onboard', 'sign up', 'try', 'prova',
-      'how does it work', 'come funziona', 'what do i do', 'next step'
+    questions: [
+      "how do I get started",
+      "how to begin",
+      "first step",
+      "what do I do first",
+      "come iniziare",
+      "how does it work",
+      "where do I start",
+      "how to try it",
+      "onboarding",
     ],
-    answer: `Great question! Here's how to get started with TaalumaFlow:\n\n1️⃣ Book a free 30-minute call — we look at your current process and tell you honestly if AI helps\n2️⃣ We scope a prototype using your actual data (2 weeks)\n3️⃣ You see real output before committing to anything\n\nReach us anytime:\n📧 talumaflow@gmail.com\n📱 WhatsApp: +39 328 9741517`
+    answer: "Getting started is easy! 👋\n\n**1.** Book a free 30-minute call — we look at your current process and tell you honestly if AI can help\n**2.** We build a prototype using your actual data (2 weeks)\n**3.** You see real output before committing to anything\n\nNo obligation, no sales pitch — just an honest conversation.\n\n📧 talumaflow@gmail.com\n📱 WhatsApp: +39 328 9741517",
   },
   {
-    keywords: [
-      'taalumamail', 'mail', 'order', 'ordine', 'whatsapp', 'fattura',
-      'invoice', 'preventivo', 'quote', 'extraction', 'extract', 'automatic',
-      'automatico', 'pipeline', 'pdf'
+    questions: [
+      "what is TaalumaMail",
+      "tell me about TaalumaMail",
+      "how does the order pipeline work",
+      "automatic invoice from whatsapp",
+      "order extraction",
+      "fattura automatica",
+      "preventivo automatico",
+      "how do you process orders",
+      "whatsapp order to invoice",
     ],
-    answer: `TaalumaMail — our flagship product 📧\n\nYour clients send orders by WhatsApp or email. TaalumaMail:\n• Reads the message and extracts every item, quantity, and price\n• Generates a Fattura or Preventivo PDF automatically\n• Sends it back to the client — no manual input needed\n• Runs entirely on YOUR server (no cloud, no data sharing)\n• Connects to Odoo, SAP, or any ERP via one adapter\n\nAverage time: message → invoice in under 10 seconds.`
+    answer: "**TaalumaMail** is our flagship product ✉️\n\nYour clients send orders by WhatsApp or email — in any format, even messy Italian. TaalumaMail:\n• Reads the message and extracts every item, quantity, and price\n• Generates a Fattura or Preventivo PDF automatically\n• Sends it back to the client — no manual input\n• Runs on YOUR server — no cloud, no data sharing\n• Connects to Odoo, SAP, or any ERP\n\n**Message → invoice in under 10 seconds.**",
   },
   {
-    keywords: [
-      'chatbot', 'chat bot', 'bot', 'assistant', 'conversational',
-      'ai chat', 'chatbots', 'virtual assistant', 'assistente'
+    questions: [
+      "what chatbots do you build",
+      "custom chatbot",
+      "AI assistant for my website",
+      "chatbot for my business",
+      "conversational AI",
+      "virtual assistant",
+      "chatbot WhatsApp",
     ],
-    answer: `Custom AI Chatbots 🤖\n\nWe build chatbots trained on YOUR business:\n• Your product catalog, FAQs, and ordering flow\n• Works in Italian, English, or mixed\n• Deploys on your website, WhatsApp Business, Slack, or Teams\n• Remembers context across the conversation\n\nThis demo you're using right now is an example of what we build for clients!`
+    answer: "We build **custom AI chatbots** trained on your business 🤖\n\nNot a generic assistant — one that knows your products, prices, FAQs, and ordering process.\n\n• Works in Italian, English, or mixed\n• Deploys on your website, WhatsApp Business, Slack, or Teams\n• Handles questions, qualifies leads, processes simple orders\n\nThis demo you're using right now is an example of what we build!",
   },
   {
-    keywords: [
-      'dashboard', 'analytics', 'data', 'kpi', 'report', 'forecast',
-      'insight', 'statistics', 'graph', 'chart', 'visualiz', 'dati', 'analisi'
+    questions: [
+      "data dashboards",
+      "analytics for my business",
+      "sales reports",
+      "business intelligence",
+      "KPI dashboard",
+      "data visualization",
+      "forecast inventory",
+      "sales trends",
     ],
-    answer: `Data Dashboards 📊\n\nWe turn your raw business data into clear dashboards:\n• Sales trends and customer analytics\n• Inventory forecasting with ML models\n• Custom KPIs your team actually tracks\n• Connects to your ERP exports, spreadsheets, or databases\n\nWe handle the data science — you get the answers.`
+    answer: "**Data Dashboards** — your data, made readable 📊\n\nWe connect to your existing data (ERP exports, spreadsheets, databases) and build dashboards that answer what your team actually asks:\n\n• Sales by product, customer, region\n• Inventory forecasting with ML models\n• Custom KPIs — no template defaults\n• Export-ready for presentations\n\nWe handle the data science. You get clear answers.",
   },
   {
-    keywords: [
-      'erp', 'taalumaerp', 'gestionale', 'inventory', 'stock',
-      'magazzino', 'warehouse', 'beta'
+    questions: [
+      "TaalumaERP",
+      "what is your ERP",
+      "lightweight ERP",
+      "gestionale",
+      "inventory management system",
+      "small distributor ERP",
+      "replace spreadsheets",
     ],
-    answer: `TaalumaERP (Beta) 🏗\n\nA lightweight ERP for small distributors who outgrew spreadsheets:\n• Inventory and stock management\n• Customer and order history\n• Pre-wired to TaalumaMail — orders flow in automatically\n• Italian fiscal compliance built in\n• No SAP complexity, no SAP price tag\n\nCurrently in beta — contact us to join early access.`
+    answer: "**TaalumaERP** is our lightweight ERP for small distributors 🏗\n\nBuilt for businesses who outgrew spreadsheets but don't need (or want to pay for) SAP:\n• Inventory and stock management\n• Customer and order history\n• Pre-wired to TaalumaMail — orders flow in automatically\n• Italian fiscal compliance built in\n\nCurrently in **beta** — contact us to join early access.",
   },
   {
-    keywords: [
-      'automation', 'automate', 'automatizzare', 'process', 'workflow',
-      'ocr', 'document', 'routing', 'repetitive', 'ripetitivo', 'manual work'
+    questions: [
+      "process automation",
+      "automate repetitive work",
+      "document OCR",
+      "email routing",
+      "data entry automation",
+      "workflow automation",
+      "automazione processi",
     ],
-    answer: `Process Automation ⚙️\n\nWe automate the repetitive work that slows your team down:\n• Document OCR and automatic classification\n• Data entry from emails, PDFs, and forms\n• Intelligent email routing to the right person\n• Scheduled report generation\n\nAI handles the variation and edge cases that rule-based systems miss.`
+    answer: "**Process Automation** ⚙️\n\nWe automate the repetitive work that slows your team down:\n• Document OCR and automatic classification\n• Data entry from emails, PDFs, and forms\n• Intelligent email routing\n• Scheduled report generation\n\nAI handles the variation and edge cases that rule-based systems miss.",
   },
   {
-    keywords: [
-      'custom', 'bespoke', 'nlp', 'classification', 'forecasting',
-      'machine learning', 'ml', 'model', 'solution', 'soluzione', 'specifico'
+    questions: [
+      "custom AI solution",
+      "bespoke AI project",
+      "machine learning model",
+      "NLP",
+      "text classification",
+      "demand forecasting",
+      "recommendation system",
+      "fine-tuned model",
     ],
-    answer: `Custom AI Solutions 🧠\n\nIf your problem doesn't fit a standard product, we build it:\n• NLP and text classification pipelines\n• Demand forecasting models\n• Recommendation systems\n• Fine-tuned local AI models\n\nBuilt by data scientists. Delivered as running software — not a notebook.`
+    answer: "**Custom AI Solutions** 🧠\n\nWhen your problem doesn't fit a standard product, we build it:\n• NLP and text classification pipelines\n• Demand forecasting models\n• Recommendation systems\n• Fine-tuned local AI models\n\nBuilt by data scientists. Delivered as running software — not a notebook.",
   },
   {
-    keywords: [
-      'price', 'cost', 'pricing', 'quanto costa', 'prezzo', 'costo',
-      'budget', 'pay', 'abbonamento', 'subscription', 'fee', 'tariff', 'expensive'
+    questions: [
+      "how much does it cost",
+      "what is the price",
+      "pricing",
+      "quanto costa",
+      "budget",
+      "subscription fee",
+      "is it expensive",
+      "cost estimate",
     ],
-    answer: `Pricing 💰\n\nWe scope each project before quoting — cost depends on complexity and your data scale.\n\nTypical ranges:\n• Simple chatbot or dashboard: from €1,500 one-time\n• TaalumaMail deployment: from €2,000 + optional monthly support\n• Custom AI projects: scoped per project\n\nBook a free 30-min call and we'll give you a realistic number:\n📧 talumaflow@gmail.com\n📱 +39 328 9741517`
+    answer: "Pricing depends on the project scope 💰\n\nWe scope each engagement before quoting:\n• **TaalumaMail deployment:** from €2,000 one-time + optional monthly support\n• **Custom chatbot:** from €1,500 one-time\n• **Dashboard project:** from €1,200 depending on data complexity\n• **Custom AI:** scoped per project\n\nThe best way to get a real number is a 30-minute call:\n📧 talumaflow@gmail.com\n📱 +39 328 9741517",
   },
   {
-    keywords: [
-      'on-premise', 'onprem', 'self-hosted', 'privacy', 'cloud',
-      'secure', 'security', 'dati', 'gdpr', 'data protection', 'safe'
+    questions: [
+      "is my data safe",
+      "data privacy",
+      "GDPR",
+      "do you store my data",
+      "cloud or on-premise",
+      "where does data go",
+      "sicurezza dei dati",
+      "privacy",
     ],
-    answer: `Data Privacy & Security 🔒\n\nEverything runs on YOUR hardware by default:\n• The AI model runs locally (no OpenAI, no cloud API)\n• Your client orders never leave your network\n• GDPR-friendly by design\n• You own the data, the model, and the server\n\nThis is our biggest differentiator vs SaaS competitors.`
+    answer: "**Your data stays on your hardware** 🔒\n\nThis is our biggest differentiator:\n• The AI model runs locally using Ollama — no cloud API calls\n• Your client orders never leave your network\n• GDPR-compliant by design — you own everything\n• No subscription to an external AI service\n\nVs SaaS competitors: your data is never sent to OpenAI, AWS, or any third party.",
   },
   {
-    keywords: [
-      'docker', 'deploy', 'install', 'setup', 'server', 'self-host',
-      'come installare', 'technical', 'tecnico', 'requirement', 'hosting'
+    questions: [
+      "how do you deploy",
+      "technical requirements",
+      "what server do I need",
+      "Docker",
+      "self-hosted",
+      "installation",
+      "how to set up",
+      "setup time",
     ],
-    answer: `Technical Setup ⚡\n\nDeployment is intentionally simple:\n• One Docker Compose file — run: docker compose up -d\n• Works on a workstation or a small server\n• No Kubernetes, no cloud subscriptions\n• We handle the setup and document everything\n\nTypical first deployment: under 1 hour.`
+    answer: "Deployment is intentionally simple ⚡\n\n• **One Docker Compose file** — `docker compose up -d`\n• Works on a workstation or a small server\n• No Kubernetes, no cloud subscriptions needed\n• We handle the setup and document everything\n\nTypical first deployment: **under 1 hour**.",
   },
   {
-    keywords: [
-      'odoo', 'sap', 'integration', 'connect', 'existing', 'api',
-      'webhook', 'gestionale', 'integrate', 'collegare', 'sync'
+    questions: [
+      "what ERP do you integrate with",
+      "does it work with Odoo",
+      "SAP integration",
+      "connect to my existing system",
+      "API",
+      "webhook",
+      "collegare al gestionale",
     ],
-    answer: `ERP & System Integration 🔌\n\nWe connect to whatever you already use:\n• Odoo, SAP, custom gestionale via a Python adapter\n• Any HTTP endpoint via our webhook adapter\n• Structured order data POSTed in real-time\n• No changes needed on your ERP side\n\nOne adapter class. Clean separation. Zero lock-in.`
+    answer: "We connect to whatever you already use 🔌\n\n• **Odoo, SAP, custom gestionale** — via a Python adapter\n• **Any HTTP endpoint** — via our webhook adapter\n• Structured order data is POSTed in real-time\n• No changes needed on your ERP side\n\nOne adapter class. Clean separation. No lock-in.",
   },
   {
-    keywords: [
-      'contact', 'contatto', 'call', 'meet', 'demo', 'speak', 'talk',
-      'reach', 'email', 'phone', 'telefono', 'appointment', 'book', 'prenota'
+    questions: [
+      "who are you",
+      "about TaalumaFlow",
+      "who built this",
+      "team background",
+      "data scientists",
+      "company info",
+      "chi siete",
     ],
-    answer: `Let's talk! 📞\n\n📧 Email: talumaflow@gmail.com\n📱 WhatsApp: +39 328 9741517\n🌍 Web: www.talumaflow.com\n📸 Social: @talumaflow\n\nWe always start with a free 30-minute call — no pitch, just an honest look at whether AI actually helps your process.`
+    answer: "We're a team of **data scientists** based in Milan, Italy 👋\n\nWe got frustrated watching AI demos that don't survive contact with real business data — so we build tools that actually work in production.\n\n• No buzzwords\n• No overselling\n• If AI won't help your specific problem, we say so before taking the work\n\nRemote-first. Serving clients across Italy and internationally.",
   },
   {
-    keywords: [
-      'who', 'team', 'founder', 'company', 'about', 'chi siete', 'chi sei',
-      'data scientist', 'background', 'experience', 'storia', 'history'
+    questions: [
+      "speak Italian",
+      "parli italiano",
+      "risposta in italiano",
+      "posso scrivere in italiano",
+      "assistenza in italiano",
     ],
-    answer: `About TaalumaFlow 👋\n\nWe're a team of data scientists based in Milan, Italy.\n\nWe got tired of seeing AI demos that don't survive contact with real business data — so we build tools that actually work in production:\n• No buzzwords\n• No overselling\n• If AI won't help your specific problem, we tell you before taking the work\n\nRemote-first. Serving clients across Italy and internationally.`
+    answer: "Certo, parliamo italiano! 🇮🇹\n\nSiamo basati a Milano e serviamo clienti in tutta Italia. Tutti i nostri prodotti supportano l'italiano di default.\n\nTaalumaMail estrae ordini in italiano, dialetti misti e messaggi WhatsApp informali senza problemi.\n\nScrivici quando vuoi:\n📧 talumaflow@gmail.com\n📱 +39 328 9741517",
   },
   {
-    keywords: [
-      'italian', 'italiano', 'italy', 'milan', 'milano', 'language',
-      'lingua', 'speak italian', 'parla italiano'
+    questions: [
+      "how to contact you",
+      "get in touch",
+      "book a call",
+      "demo request",
+      "email address",
+      "phone number",
+      "come contattarvi",
+      "prenota una chiamata",
     ],
-    answer: `Sì, parliamo italiano! 🇮🇹\n\nSiamo basati a Milano e serviamo clienti in tutta Italia.\n\nTutti i nostri prodotti supportano l'italiano di default — incluso TaalumaMail che estrae ordini in italiano, dialetti misti e messaggi WhatsApp informali.\n\nScrivici quando vuoi:\n📧 talumaflow@gmail.com\n📱 +39 328 9741517`
+    answer: "Let's talk! 📞\n\n📧 **Email:** talumaflow@gmail.com\n📱 **WhatsApp:** +39 328 9741517\n🌍 **Web:** www.talumaflow.com\n📸 **Social:** @talumaflow\n\nWe always start with a **free 30-minute call** — no pitch, just an honest look at whether AI actually helps your process.",
   },
   {
-    keywords: [
-      'difference', 'differenza', 'vs', 'compare', 'competitor', 'better',
-      'why you', 'perché voi', 'unique', 'unico', 'advantage', 'vantaggio'
+    questions: [
+      "why choose TaalumaFlow",
+      "what makes you different",
+      "vs competitors",
+      "advantages",
+      "why not use ChatGPT",
+      "why not SaaS",
+      "perché scegliervi",
     ],
-    answer: `Why TaalumaFlow? 🎯\n\nMost AI tools are built for enterprise IT teams.\nWe build for the distributor processing 40 WhatsApp orders a day.\n\nWhat makes us different:\n✓ Everything runs on YOUR server — zero cloud dependency\n✓ We're data scientists, not consultants — we know what AI can't do\n✓ One Docker file to deploy, not a 6-month integration project\n✓ If it won't work for your data, we tell you before charging you\n✓ Italian compliance built in from day one`
+    answer: "Why TaalumaFlow? 🎯\n\nMost AI tools are built for enterprise IT teams. We build for the distributor processing 40 WhatsApp orders a day.\n\n✓ Everything runs on YOUR server — zero cloud dependency\n✓ Data scientists, not consultants — we know what AI actually can't do\n✓ One Docker file, not a 6-month integration project\n✓ If it won't work for your data, we tell you before charging you\n✓ Italian compliance built in from day one",
   },
 ];
-
-/**
- * Search the KB for the most relevant answer.
- * Returns the answer string or null if no match found.
- */
-export function searchKB(query) {
-  const q = query.toLowerCase().trim();
-  let best = null;
-  let bestScore = 0;
-
-  for (const entry of KB) {
-    // Count how many keywords appear in the query
-    let score = 0;
-    for (const kw of entry.keywords) {
-      if (q.includes(kw)) score += kw.split(' ').length; // multi-word matches score higher
-    }
-    if (score > bestScore) {
-      bestScore = score;
-      best = entry;
-    }
-  }
-
-  // Require at least one keyword match
-  return bestScore > 0 ? best.answer : null;
-}
