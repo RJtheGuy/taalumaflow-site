@@ -524,3 +524,14 @@ footer { border-top: 1px solid var(--border); padding: 36px 48px; display: flex;
   background: var(--text3);
   animation: typeDot 1.2s infinite;
 }
+
+.pc-icon svg {
+  display: block;
+  flex-shrink: 0;
+}
+ 
+/* Ensures gradient background on pc-icon doesn't fight with
+   the default surface2 background when style attr is present */
+.pc-icon[style] {
+  background: unset; /* let inline style win */
+}
