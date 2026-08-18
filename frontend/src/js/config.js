@@ -1,5 +1,5 @@
 
-export const BACKEND_URL = "https://cinema-enlargement-starter-hosting.trycloudflare.com";
+export const BACKEND_URL = "https://dresses-parameter-displayed-iowa.trycloudflare.com";
 export const PUBLIC_API = {
   extract : `${BACKEND_URL}/api/public/extract/`,
   chat    : `${BACKEND_URL}/api/public/chat/`,
