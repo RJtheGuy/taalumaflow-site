@@ -1,80 +1,39 @@
-# TaalumaFlow — Company Website
-
-Marketing and product site for [TaalumaFlow](https://www.talumaflow.com),
-an AI automation company based in Milan, Italy.
-
-## Repository structure
+# TaalumaFlow — Website + Public API
 
 ```
-taalumaflow-site/
-├── index.html              ← Entry point (HTML only — no inline CSS or JS)
-├── src/
-│   ├── css/
-│   │   └── main.css        ← All styles + CSS variables (dark/light tokens)
-│   └── js/
-│       ├── index.js        ← App entry point — wires all modules to DOM
-│       ├── particles.js    ← Animated canvas background
-│       ├── theme.js        ← Dark/light toggle + localStorage persistence
-│       ├── chat.js         ← AI chat logic (inline demo + floating bubble)
-│       ├── chatPrompt.js   ← System prompt — EDIT THIS to update bot knowledge
-│       └── ui.js           ← Nav, scroll reveal, counters, chart toggle, form
-├── public/                 ← Drop favicon.ico and og-image.png here
-├── docs/
-│   ├── DEPLOYMENT.md       ← Render, GitHub Pages, API proxy setup
-│   └── CUSTOMISATION.md    ← Colors, products, copy, chatbot knowledge
-├── .gitignore
-├── .env.example
-└── README.md
+taalumaflow/
+├── frontend/          ← GitHub Pages static site (talumaflow.com)
+│   ├── index.html
+│   ├── CNAME
+│   ├── src/
+│   │   ├── css/main.css
+│   │   └── js/
+│   │       ├── index.js       ← entry point
+│   │       ├── config.js      ← SET BACKEND_URL HERE
+│   │       ├── demo.js        ← extraction demo + CSV dashboard
+│   │       ├── chat.js        ← qualifying chatbot
+│   │       ├── chat-engine.js ← semantic similarity (Transformers.js)
+│   │       ├── rag-kb.js      ← knowledge base
+│   │       ├── particles.js
+│   │       ├── theme.js
+│   │       └── ui.js
+│   └── public/        ← favicon.ico + og-image.png go here
+│
+└── backend/           ← Add these files to your Django backend
+    ├── erp/
+    │   ├── views_public.py    ← 3 public endpoints
+    │   └── urls_public.py     ← URL patterns
+    ├── config_urls_patch.py   ← shows what to add to config/urls.py
+    └── env_additions.txt      ← add these to your .env
 ```
 
-## Running locally
+## Setup order
 
-No build step. No Node. No package.json.
-
-```bash
-# Python
-python -m http.server 3000
-
-# Node
-npx serve .
-
-# VS Code: Install "Live Server", right-click index.html → Open with Live Server
-```
-
-> **Note:** Because the JS uses ES modules (`import`/`export`), you must serve
-> through a local server — opening `index.html` directly as a `file://` URL
-> will block module imports. Any of the commands above works.
-
-## Deploying
-
-### Render (static site)
-- Build command: *(leave empty)*
-- Publish directory: `.`
-
-### GitHub Pages
-Settings → Pages → Source: Deploy from branch → `main` / `/ (root)`
-
-### Netlify / Cloudflare Pages
-Connect the GitHub repo. No build command. Publish from root.
-
-## Chatbot knowledge
-
-To update what the AI assistant knows about TaalumaFlow, edit
-`src/js/chatPrompt.js` — the `SYSTEM_PROMPT` export.
-No other file needs to change.
-
-## Theme
-
-Dark mode is the default (`data-theme="dark"` on `<html>`).
-The toggle in the nav switches modes and saves to `localStorage`.
-
-All colours are CSS custom properties in `src/css/main.css`:
-- `[data-theme="dark"]` block
-- `[data-theme="light"]` block
-
-## Contact
-
-- **Email:** talumaflow@gmail.com
-- **WhatsApp:** +39 328 9741517
-- **Web:** www.talumaflow.com
-- **Social:** @talumaflow
+1. Copy `backend/erp/views_public.py` and `backend/erp/urls_public.py`
+   to your Django backend
+2. Add `path('api/public/', include('erp.urls_public'))` to `config/urls.py`
+3. Add env vars from `backend/env_additions.txt` to your `.env`
+4. Restart Docker: `docker compose restart backend`
+5. Run tunnel: `cloudflared tunnel --url http://localhost:8000`
+6. Paste tunnel URL into `frontend/src/js/config.js` → BACKEND_URL
+7. Push frontend to GitHub → site live at talumaflow.com

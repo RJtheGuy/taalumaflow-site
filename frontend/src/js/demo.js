@@ -1,0 +1,421 @@
+/**
+ * demo.js
+ * ─────────────────────────────────────────────────────────────
+ * Two interactive features:
+ *
+ * 1. initExtractionDemo()
+ *    Calls /api/public/extract/ on the Django backend.
+ *    Your real Mistral model does the extraction.
+ *    Falls back to a clear "backend not connected" message
+ *    with instructions to contact for a live demo.
+ *
+ * 2. initCSVDashboard()
+ *    Pure client-side CSV upload → live charts.
+ *    D3-style SVG charts, zero data sent anywhere.
+ * ─────────────────────────────────────────────────────────────
+ */
+import { PUBLIC_API, IS_BACKEND_CONFIGURED } from './config.js';
+
+/* ══════════════════════════════════════════════════════════════
+   EXAMPLE ORDER MESSAGES
+══════════════════════════════════════════════════════════════ */
+const EXAMPLES = [
+  {
+    label: 'Italian WhatsApp (informal)',
+    text: `Ciao! Sono Marco Bianchi da Distribuzione Nord.
+Mi servono:
+- 5x Olio EVO Frantoio 0.75L a 12€ cad
+- 3x Pasta Di Martino Spaghetti 500g a 1.80€
+- 2x Aceto Balsamico IGP 250ml a 8.50€
+Spedire a Via Garibaldi 44, Milano. Grazie mille`,
+  },
+  {
+    label: 'Italian business email',
+    text: `Buongiorno,
+Le invio il nostro ordine settimanale:
+- 10 colli Vino Rosso Toscano DOC 0.75L a 18€/cad
+- 6 bottiglie Brunello di Montalcino 2019 a 45€/cad
+- 4 conf. Pasta Artigianale Mista (500g) a 3.20€
+Cliente: Ristorante La Pergola Srl
+Indirizzo consegna: Via Roma 100, Salerno 84100
+Distinti saluti`,
+  },
+  {
+    label: 'English order',
+    text: `Hi, I need to order the following:
+- 4x Extra Virgin Olive Oil 750ml at €11.00 each
+- 8x Pasta Fusilli 500g at €1.60 each
+- 2x Balsamic Vinegar of Modena IGP at €9.00
+Deliver to: John Smith, Via Roma 22, Milan 20121
+Thank you`,
+  },
+];
+
+let currentExample = 0;
+
+/* ══════════════════════════════════════════════════════════════
+   1. EXTRACTION DEMO
+══════════════════════════════════════════════════════════════ */
+export function initExtractionDemo() {
+  const textarea  = document.getElementById('demo-input');
+  const runBtn    = document.getElementById('demo-run-btn');
+  const cycleBtn  = document.getElementById('demo-cycle-btn');
+  const resultEl  = document.getElementById('demo-result');
+  const emptyEl   = document.getElementById('demo-empty');
+  const loadingEl = document.getElementById('demo-loading');
+  if (!textarea || !runBtn) return;
+
+  textarea.value = EXAMPLES[0].text;
+
+  // Show backend status
+  if (!IS_BACKEND_CONFIGURED) {
+    const hint = document.getElementById('demo-backend-hint');
+    if (hint) hint.style.display = 'block';
+  }
+
+  cycleBtn?.addEventListener('click', () => {
+    currentExample = (currentExample + 1) % EXAMPLES.length;
+    textarea.value = EXAMPLES[currentExample].text;
+    const lbl = document.getElementById('demo-example-label');
+    if (lbl) lbl.textContent = EXAMPLES[currentExample].label;
+    resetOutput(resultEl, emptyEl, loadingEl);
+  });
+
+  runBtn.addEventListener('click', () =>
+    runExtraction(textarea, runBtn, resultEl, emptyEl, loadingEl)
+  );
+
+  textarea.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      e.preventDefault(); runBtn.click();
+    }
+  });
+}
+
+function resetOutput(resultEl, emptyEl, loadingEl) {
+  if (resultEl)  { resultEl.style.display  = 'none'; resultEl.innerHTML = ''; }
+  if (loadingEl) { loadingEl.style.display = 'none'; }
+  if (emptyEl)   { emptyEl.style.display   = 'flex'; }
+}
+
+async function runExtraction(textarea, runBtn, resultEl, emptyEl, loadingEl) {
+  const text = textarea.value.trim();
+  if (!text) return;
+
+  runBtn.disabled = true;
+  runBtn.innerHTML = '<span class="demo-spin"></span> Extracting…';
+  if (emptyEl)   emptyEl.style.display   = 'none';
+  if (resultEl)  resultEl.style.display  = 'none';
+  if (loadingEl) loadingEl.style.display = 'flex';
+
+  try {
+    if (!IS_BACKEND_CONFIGURED) throw new Error('no_backend');
+
+    const res = await fetch(PUBLIC_API.extract, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text }),
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || `HTTP ${res.status}`);
+    }
+
+    const data = await res.json();
+    if (loadingEl) loadingEl.style.display = 'none';
+    renderResult(data, resultEl);
+
+  } catch (err) {
+    if (loadingEl) loadingEl.style.display = 'none';
+    renderError(err, resultEl, emptyEl);
+  }
+
+  runBtn.disabled = false;
+  runBtn.innerHTML = '<span>▶</span> Extract order';
+}
+
+function renderResult(data, container) {
+  if (!container) return;
+
+  const items    = data.items || [];
+  const subtotal = items.reduce((s, i) => s + (i.qty * i.unit_price), 0);
+  const vat      = subtotal * 0.22;
+  const total    = subtotal + vat;
+  const conf     = Math.round((data.confidence || 0) * 100);
+  const isGood   = conf >= 75;
+  const confClr  = conf >= 75 ? 'var(--green)' : conf >= 50 ? '#f59e0b' : '#ef4444';
+  const missing  = data.missing_fields || [];
+
+  container.innerHTML = `
+    <div class="demo-result-inner">
+      <div class="demo-result-hdr">
+        <div>
+          <div class="demo-order-num">PRV-${Date.now().toString(36).toUpperCase().slice(-8)}</div>
+          <div class="demo-order-ts">${new Date().toLocaleString('en-GB')}</div>
+        </div>
+        <span class="demo-badge ${isGood ? 'badge-approved' : 'badge-review'}">
+          ${isGood ? '✓ Auto-approved' : '⚠ Needs review'}
+        </span>
+      </div>
+
+      <div class="demo-conf-row">
+        <span>Confidence score</span>
+        <strong style="color:${confClr}">${conf}%</strong>
+      </div>
+      <div class="demo-conf-bg">
+        <div class="demo-conf-fill" style="width:${conf}%;background:${confClr}"></div>
+      </div>
+
+      ${missing.length ? `
+        <div class="demo-missing">
+          ⚠ Would go to review queue — missing: ${missing.join(', ')}
+        </div>` : ''}
+
+      <div class="demo-customer">
+        <div class="demo-avatar">
+          ${(data.client_name||'?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase()}
+        </div>
+        <div>
+          <div class="demo-cname">${data.client_name || '<span style="color:var(--text3)">Unknown</span>'}</div>
+          <div class="demo-caddr">${data.client_address || '<span style="color:var(--text3)">No address</span>'}</div>
+          ${data.client_email ? `<div class="demo-caddr">${data.client_email}</div>` : ''}
+        </div>
+      </div>
+
+      <table class="demo-table">
+        <thead>
+          <tr><th>Item</th><th>Qty</th><th>Unit</th><th style="text-align:right">Total</th></tr>
+        </thead>
+        <tbody>
+          ${items.length
+            ? items.map(i => `
+                <tr>
+                  <td>${i.description}</td>
+                  <td>${i.qty}</td>
+                  <td>€ ${(+i.unit_price).toFixed(2)}</td>
+                  <td style="text-align:right;font-weight:600">
+                    € ${(i.qty * i.unit_price).toFixed(2)}
+                  </td>
+                </tr>`).join('')
+            : `<tr><td colspan="4" style="color:var(--text3);text-align:center;padding:12px">
+                No items extracted
+               </td></tr>`
+          }
+        </tbody>
+      </table>
+
+      <div class="demo-totals">
+        <div class="demo-tot"><div class="demo-tot-lbl">Subtotal</div><div>€ ${subtotal.toFixed(2)}</div></div>
+        <div class="demo-tot"><div class="demo-tot-lbl">VAT 22%</div><div>€ ${vat.toFixed(2)}</div></div>
+        <div class="demo-tot demo-tot-grand">
+          <div class="demo-tot-lbl">Total</div>
+          <div>€ ${total.toFixed(2)}</div>
+        </div>
+      </div>
+
+      ${isGood ? `
+        <div class="demo-invoice-box">
+          <span>📄</span>
+          <span>Fattura PDF generated · saved to NAS · sent to client</span>
+        </div>` : ''}
+
+      <div style="text-align:center;margin-top:16px">
+        <a href="#contact" class="btn-primary" style="font-size:13px;padding:10px 24px">
+          Get this for your orders →
+        </a>
+      </div>
+    </div>`;
+
+  container.style.display = 'block';
+}
+
+function renderError(err, resultEl, emptyEl) {
+  const isNoBackend = err.message === 'no_backend';
+  const msg = isNoBackend
+    ? `<strong>Backend not connected</strong><br><br>
+       This demo calls your real TaalumaMail pipeline. To see it live,
+       <a href="#contact" style="color:var(--blue)">book a demo call</a>
+       and we'll run it against your actual order messages.<br><br>
+       📱 <a href="https://wa.me/393289741517" style="color:var(--blue)">+39 328 9741517</a>`
+    : `<strong>Extraction failed</strong><br>
+       ${err.message}<br><br>
+       The AI model may be starting up — try again in 10 seconds.`;
+
+  if (emptyEl) {
+    emptyEl.style.display = 'flex';
+    emptyEl.innerHTML = `<div class="demo-empty-icon">⚠️</div>
+      <div style="font-size:13px;color:var(--text2);text-align:center;line-height:1.6">${msg}</div>`;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   2. CSV DASHBOARD — 100% client-side
+══════════════════════════════════════════════════════════════ */
+export function initCSVDashboard() {
+  const dropzone  = document.getElementById('csv-dropzone');
+  const fileInput = document.getElementById('csv-file-input');
+  const dashEl    = document.getElementById('csv-dashboard');
+  const emptyEl   = document.getElementById('csv-empty');
+  if (!dropzone || !fileInput) return;
+
+  dropzone.addEventListener('dragover',  e => { e.preventDefault(); dropzone.classList.add('drag-over'); });
+  dropzone.addEventListener('dragleave', ()  => dropzone.classList.remove('drag-over'));
+  dropzone.addEventListener('drop', e => {
+    e.preventDefault(); dropzone.classList.remove('drag-over');
+    const f = e.dataTransfer.files[0];
+    if (f && f.name.endsWith('.csv')) readAndRender(f, dashEl, dropzone);
+  });
+
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files[0]) readAndRender(fileInput.files[0], dashEl, dropzone);
+  });
+
+  document.getElementById('csv-sample-btn')?.addEventListener('click', e => {
+    e.stopPropagation();
+    renderDashboard(SAMPLE_ROWS, dashEl, dropzone);
+  });
+}
+
+const SAMPLE_ROWS = [
+  {date:'2026-01',product:'Olio EVO Frantoio',category:'Olive Oil',qty:12,revenue:144},
+  {date:'2026-01',product:'Pasta Di Martino',category:'Pasta',qty:30,revenue:54},
+  {date:'2026-01',product:'Vino Rosso Toscano',category:'Wine',qty:8,revenue:144},
+  {date:'2026-01',product:'Aceto Balsamico',category:'Vinegar',qty:5,revenue:42.5},
+  {date:'2026-02',product:'Olio EVO Frantoio',category:'Olive Oil',qty:18,revenue:216},
+  {date:'2026-02',product:'Pasta Di Martino',category:'Pasta',qty:42,revenue:75.6},
+  {date:'2026-02',product:'Vino Rosso Toscano',category:'Wine',qty:15,revenue:270},
+  {date:'2026-02',product:'Brunello 2019',category:'Wine',qty:5,revenue:225},
+  {date:'2026-03',product:'Pasta Fusilli',category:'Pasta',qty:50,revenue:80},
+  {date:'2026-03',product:'Olio EVO Frantoio',category:'Olive Oil',qty:22,revenue:264},
+  {date:'2026-03',product:'Vino Bianco Soave',category:'Wine',qty:18,revenue:162},
+  {date:'2026-03',product:'Aceto Balsamico',category:'Vinegar',qty:12,revenue:102},
+  {date:'2026-03',product:'Vino Rosso Toscano',category:'Wine',qty:20,revenue:360},
+];
+
+function readAndRender(file, dashEl, dropzone) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    const rows = parseCSV(e.target.result);
+    if (rows.length) renderDashboard(rows, dashEl, dropzone);
+  };
+  reader.readAsText(file);
+}
+
+function parseCSV(text) {
+  const lines = text.trim().split('\n');
+  const headers = lines[0].split(',').map(h => h.trim().replace(/"/g,'').toLowerCase());
+  return lines.slice(1).map(line => {
+    const vals = line.split(',').map(v => v.trim().replace(/"/g,''));
+    const obj = {};
+    headers.forEach((h, i) => obj[h] = vals[i] || '');
+    return obj;
+  }).filter(r => Object.values(r).some(Boolean));
+}
+
+function renderDashboard(rows, dashEl, dropzone) {
+  if (!dashEl) return;
+  if (dropzone) dropzone.style.display = 'none';
+
+  // Detect columns
+  const keys = Object.keys(rows[0] || {});
+  const numKey = keys.find(k => /revenue|sales|amount|total|value/i.test(k)) ||
+                 keys.find(k => /qty|quantity/i.test(k));
+  const catKey = keys.find(k => /category|cat|type/i.test(k)) ||
+                 keys.find(k => /product|item|name/i.test(k));
+  const dateKey = keys.find(k => /date|month|period|time/i.test(k));
+
+  const byCategory = {}, byDate = {};
+  let grand = 0, count = 0;
+
+  rows.forEach(r => {
+    const val = parseFloat(String(r[numKey] || 0).replace(/[^0-9.]/g,'')) || 0;
+    const cat = r[catKey] || 'Other';
+    const dt  = (r[dateKey] || '').slice(0, 7);
+    byCategory[cat] = (byCategory[cat] || 0) + val;
+    if (dt) byDate[dt] = (byDate[dt] || 0) + val;
+    grand += val; count++;
+  });
+
+  const topCats  = Object.entries(byCategory).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const dates    = Object.keys(byDate).sort();
+  const dateVals = dates.map(d => byDate[d]);
+  const maxCat   = topCats[0]?.[1] || 1;
+
+  dashEl.innerHTML = `
+    <div class="csv-dash-header">
+      <div class="csv-kpi"><div class="csv-kpi-num">€ ${grand.toLocaleString('it-IT',{minimumFractionDigits:0,maximumFractionDigits:0})}</div><div class="csv-kpi-lbl">Total revenue</div></div>
+      <div class="csv-kpi"><div class="csv-kpi-num">${count}</div><div class="csv-kpi-lbl">Transactions</div></div>
+      <div class="csv-kpi"><div class="csv-kpi-num">${topCats.length}</div><div class="csv-kpi-lbl">Categories</div></div>
+      <div class="csv-kpi"><div class="csv-kpi-num">€ ${(grand/Math.max(count,1)).toFixed(2)}</div><div class="csv-kpi-lbl">Avg per order</div></div>
+    </div>
+    <div class="csv-charts-grid">
+      <div class="csv-chart-card">
+        <div class="csv-chart-title">Revenue by ${catKey || 'category'}</div>
+        <div class="csv-bar-chart">
+          ${topCats.map(([cat, val]) => `
+            <div class="csv-bar-row">
+              <div class="csv-bar-label" title="${cat}">${cat.length>22?cat.slice(0,20)+'…':cat}</div>
+              <div class="csv-bar-track"><div class="csv-bar-fill" style="width:${(val/maxCat*100).toFixed(1)}%"></div></div>
+              <div class="csv-bar-val">€${val.toFixed(0)}</div>
+            </div>`).join('')}
+        </div>
+      </div>
+      <div class="csv-chart-card">
+        <div class="csv-chart-title">Revenue over time</div>
+        <div id="csv-line" data-l='${JSON.stringify(dates)}' data-v='${JSON.stringify(dateVals)}'
+             style="width:100%"></div>
+      </div>
+    </div>
+    <div class="csv-privacy-note">
+      🔒 Your data never left your browser — processed entirely client-side.
+      This is how we build your actual production dashboards.
+    </div>
+    <div style="text-align:center;margin-top:20px">
+      <a href="#contact" class="btn-primary" style="font-size:13px;padding:10px 24px">
+        Build this for my real data →
+      </a>
+    </div>`;
+
+  dashEl.style.display = 'block';
+  requestAnimationFrame(() => drawLine('csv-line'));
+}
+
+function drawLine(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const labels = JSON.parse(el.dataset.l || '[]');
+  const values = JSON.parse(el.dataset.v || '[]');
+  if (!values.length) return;
+
+  const W = el.clientWidth || 320;
+  const H = 130;
+  const P = {t:16, r:12, b:28, l:44};
+  const maxV = Math.max(...values), minV = Math.min(...values);
+  const range = maxV - minV || 1;
+
+  const pts = values.map((v,i) => ({
+    x: P.l + (i / Math.max(values.length-1, 1)) * (W-P.l-P.r),
+    y: P.t + (1-(v-minV)/range) * (H-P.t-P.b),
+    v, l: labels[i],
+  }));
+
+  const line = pts.map((p,i)=>`${i===0?'M':'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+  const fill = `${line} L${pts.at(-1).x},${H-P.b} L${pts[0].x},${H-P.b} Z`;
+  const step = Math.max(1, Math.floor(pts.length/4));
+
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:${H}px;display:block;overflow:visible">
+    <defs>
+      <linearGradient id="llg" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#4F8EF7" stop-opacity="0.25"/>
+        <stop offset="100%" stop-color="#4F8EF7" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    <path d="${fill}" fill="url(#llg)"/>
+    <path d="${line}" stroke="#4F8EF7" stroke-width="2" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+    ${pts.map((p,i) => i%step===0 ? `
+      <text x="${p.x}" y="${H-6}" text-anchor="middle"
+            style="font-size:9px;fill:var(--text3);font-family:Inter,sans-serif">${p.l?.slice(0,7)||''}</text>` : '').join('')}
+    ${pts.map(p => `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3.5" fill="#4F8EF7"/>`).join('')}
+  </svg>`;
+}
