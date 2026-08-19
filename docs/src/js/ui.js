@@ -118,4 +118,4 @@ export function initContactForm(formId = 'contact-form', btnId = 'fbtn') {
     window.location.href = `mailto:talumaflow@gmail.com?subject=${subject}&body=${body}`;
     btn.textContent = orig;
     btn.disabled = false;
-}
+})
