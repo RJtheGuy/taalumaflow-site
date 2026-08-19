@@ -1,17 +1,56 @@
 from workers import WorkerEntrypoint, Request, Response
 import json
+import js
 
-SYSTEM_PROMPT = """You are the TaalumaFlow AI Assistant.
-Answer questions accurately using ONLY the provided context. If the query cannot be answered using the context, state kindly that you don't have that specific information and instruct the user to contact us:
-- Email: taalumaflow@gmail.com
+# Hardcoded Knowledge Base Content
+KNOWLEDGE_BASE = """
+TAALUMAFLOW COMPREHENSIVE KNOWLEDGE BASE:
+
+1. GETTING STARTED & PROCESS:
+- Free 30-minute consultation call to evaluate current workflow.
+- 2-week working prototype built using your actual business data.
+- See real output before making any commitment.
+
+2. PRODUCTS & SERVICES:
+- TaalumaMail: Reads orders from WhatsApp/Email, extracts line items/prices, generates invoice/estimate PDFs, and integrates with ERPs (Odoo, SAP). Processes messages in under 10 seconds. Runs on-premise.
+- Custom AI Chatbots: Trained on specific business data, FAQs, and ordering flows. Deploys to websites, WhatsApp Business, and Slack in English/Italian.
+- Analytics & Dashboards: Custom KPI dashboards, sales trend analysis, and inventory forecasting.
+
+3. PRICING STRUCTURE:
+- TaalumaMail: From €2,000 (one-time).
+- Custom Chatbot: From €1,500.
+- Dashboard Analytics: From €1,200.
+
+4. PRIVACY & SECURITY:
+- 100% On-Premise/Local Hardware via Ollama. Data never leaves your network.
+- Fully GDPR-compliant by design. You own the server, data, and models.
+
+5. TEAM & LOCATION:
+- Team of Data Scientists based in Milan, Italy.
+- Focused on production-ready AI tools without hype or overselling.
+
+6. CONTACT DETAILS:
+- Email: talumaflow@gmail.com
 - WhatsApp: +39 328 9741517
-
-Keep answers clear, helpful, and formatted cleanly using basic HTML or plain text.
+- Web: www.talumaflow.com | Socials: @talumaflow
 """
+
+SYSTEM_PROMPT = f"""You are the official TaalumaFlow AI Assistant.
+Your task is to provide accurate, helpful, and concise answers based strictly on the Knowledge Base provided below.
+
+=== KNOWLEDGE BASE ===
+{KNOWLEDGE_BASE}
+======================
+
+Instructions:
+- Use the Knowledge Base above alongside any dynamic context provided per request.
+- If the user asks something outside this information, politely inform them that you don't have those specific details and instruct them to reach out via Email (taalumaflow@gmail.com) or WhatsApp (+39 328 9741517).
+- Keep responses friendly, clear, and easy to read.
+"""
+
 
 class Default(WorkerEntrypoint):
     async def fetch(self, request: Request) -> Response:
-        # Handle CORS preflight options request
         if request.method == "OPTIONS":
             return Response(
                 None,
@@ -27,23 +66,22 @@ class Default(WorkerEntrypoint):
             return Response("Method Not Allowed", status=405)
 
         try:
-            # Parse request JSON payload from frontend
             body = await request.json()
-            user_prompt = body.get("prompt", "")
-            context = body.get("context", "")
+            user_prompt = body.get("prompt", body.get("query", ""))
+            dynamic_context = body.get("context", "")
 
-            full_system = f"{SYSTEM_PROMPT}\nContext:\n{context}"
+            # Combine system prompt with any extra dynamic context from the request
+            full_system = SYSTEM_PROMPT
+            if dynamic_context:
+                full_system += f"\n\n=== ADDITIONAL CONTEXT ===\n{dynamic_context}"
 
-            # Get the Ollama URL bound to Cloudflare environment configuration
-            ollama_url = getattr(self.env, "OLLAMA_URL", "http://your-ollama-ip:11434")
+            raw_url = getattr(self.env, "OLLAMA_URL", "http://localhost:8000")
+            base_url = raw_url.strip().strip("[]").strip("()").rstrip("/")
 
-            # Call Ollama REST API
-            import js
             payload = json.dumps({
-                "model": "llama3",
-                "prompt": user_prompt,
-                "system": full_system,
-                "stream": False
+                "query": user_prompt,
+                "system_prompt": full_system,
+                "context": dynamic_context
             })
 
             headers = js.Headers.new()
@@ -54,14 +92,23 @@ class Default(WorkerEntrypoint):
             req_options.headers = headers
             req_options.body = payload
 
-            res = await js.fetch(f"{ollama_url}/api/generate", req_options)
-            res_text = await res.text()
-            data = json.loads(res_text)
+            django_endpoint = f"{base_url}/api/public/chat/"
 
-            output_text = data.get("response", "No response generated from model.")
+            res = await js.fetch(django_endpoint, req_options)
+            res_text = await res.text()
+
+            if res.status != 200:
+                return Response(
+                    json.dumps({"error": f"Upstream error ({res.status}): {res_text}"}),
+                    status=502,
+                    headers={
+                        "Content-Type": "application/json",
+                        "Access-Control-Allow-Origin": "*"
+                    }
+                )
 
             return Response(
-                json.dumps({"response": output_text}),
+                res_text,
                 status=200,
                 headers={
                     "Content-Type": "application/json",

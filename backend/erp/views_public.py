@@ -1,16 +1,3 @@
-"""
-backend/erp/views_public.py
-────────────────────────────────────────────────────────────────
-Three public endpoints for the talumaflow.com website demos.
-No authentication required. Rate-limited per IP.
-CORS restricted to talumaflow.com and localhost (dev).
-
-Endpoints:
-  POST /api/public/extract/   ← order extraction demo
-  POST /api/public/chat/      ← chatbot KB fallback (server-side)
-  GET  /api/public/health/    ← is Ollama up?
-────────────────────────────────────────────────────────────────
-"""
 import json
 import time
 import logging
@@ -18,7 +5,6 @@ from collections import defaultdict
 
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_http_methods
 from django.views.decorators.cache import never_cache
 
 logger = logging.getLogger(__name__)
@@ -34,7 +20,7 @@ ALLOWED_ORIGINS = {
 
 
 def _cors(response, origin='*'):
-    response['Access-Control-Allow-Origin']  = origin
+    response['Access-Control-Allow-Origin'] = origin
     response['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
     response['Access-Control-Allow-Headers'] = 'Content-Type'
     return response
@@ -50,12 +36,11 @@ def _get_origin(request):
     return origin if origin in ALLOWED_ORIGINS else 'https://talumaflow.com'
 
 
-# ── Rate limiting (simple in-memory, per IP) ─────────────────
+# ── Rate limiting ────────────────────────────────────────────
 _rate_store: dict = defaultdict(list)
 
 
 def _rate_limit(ip: str, limit: int = 10, window: int = 60) -> bool:
-    """Return True if request is allowed, False if rate limit exceeded."""
     now = time.time()
     _rate_store[ip] = [t for t in _rate_store[ip] if now - t < window]
     if len(_rate_store[ip]) >= limit:
@@ -69,135 +54,7 @@ def _get_ip(request) -> str:
     return xff.split(',')[0].strip() if xff else request.META.get('REMOTE_ADDR', '')
 
 
-# ── /api/public/extract/ ─────────────────────────────────────
-@csrf_exempt
-@never_cache
-def public_extract(request):
-    origin = _get_origin(request)
-
-    if request.method == 'OPTIONS':
-        return _cors_preflight(origin)
-
-    if request.method != 'POST':
-        return _cors(JsonResponse({'error': 'POST required'}, status=405), origin)
-
-    ip = _get_ip(request)
-    if not _rate_limit(ip, limit=10, window=60):
-        logger.warning(f"[PublicAPI] Rate limit hit: {ip}")
-        return _cors(
-            JsonResponse({'error': 'Rate limit exceeded — try again in a minute.'}, status=429),
-            origin
-        )
-
-    try:
-        body = json.loads(request.body)
-    except (json.JSONDecodeError, ValueError):
-        return _cors(JsonResponse({'error': 'Invalid JSON'}, status=400), origin)
-
-    text = (body.get('text') or '').strip()
-    if not text:
-        return _cors(JsonResponse({'error': 'text is required'}, status=400), origin)
-    if len(text) > 2000:
-        return _cors(JsonResponse({'error': 'Message too long (max 2000 chars)'}, status=400), origin)
-
-    try:
-        from apps.flow.services.extractor import extract_order
-        from apps.flow.services.confidence_scorer import score_extraction
-
-        logger.info(f"[PublicAPI] Extraction request from {ip}: {text[:60]}…")
-
-        result  = extract_order(text)
-        scoring = score_extraction(result)
-
-        result.confidence     = scoring.confidence
-        result.missing_fields = scoring.missing_fields
-
-        payload = {
-            'client_name'   : result.client_name,
-            'client_address': result.client_address,
-            'client_email'  : result.client_email,
-            'client_phone'  : result.client_phone,
-            'language'      : result.language,
-            'confidence'    : round(scoring.confidence, 3),
-            'missing_fields': scoring.missing_fields,
-            'needs_review'  : scoring.needs_review,
-            'items': [
-                {
-                    'description': i.description,
-                    'qty'        : float(i.qty or 0),
-                    'unit_price' : float(i.unit_price or 0),
-                    'line_total' : round(float(i.qty or 0) * float(i.unit_price or 0), 2),
-                }
-                for i in result.items
-            ],
-        }
-
-        logger.info(
-            f"[PublicAPI] Extracted {len(result.items)} items, "
-            f"confidence={scoring.confidence:.0%} from {ip}"
-        )
-
-        return _cors(JsonResponse(payload), origin)
-
-    except Exception as exc:
-        logger.error(f"[PublicAPI] Extraction error: {exc}")
-        return _cors(
-            JsonResponse({'error': 'Extraction failed — our AI model may be starting up. Try again in 10 seconds.'}, status=500),
-            origin
-        )
-
-
-# ── /api/public/health/ ──────────────────────────────────────
-@csrf_exempt
-@never_cache
-def public_health(request):
-    origin = _get_origin(request)
-    if request.method == 'OPTIONS':
-        return _cors_preflight(origin)
-
-    try:
-        from erp.services.health import check_ollama
-        status = check_ollama()
-        return _cors(JsonResponse({'ok': True, 'model': status.get('model', 'mistral:latest')}), origin)
-    except Exception:
-        return _cors(JsonResponse({'ok': False}), origin)
-
-
-# ── /api/public/chat/ ────────────────────────────────────────
-@csrf_exempt
-@never_cache
-def public_chat(request):
-    """
-    Server-side KB keyword search for the website chatbot.
-    Returns the best matching answer from a curated knowledge base.
-    No LLM involved — fast, free, no hallucination.
-    """
-    origin = _get_origin(request)
-
-    if request.method == 'OPTIONS':
-        return _cors_preflight(origin)
-
-    if request.method != 'POST':
-        return _cors(JsonResponse({'error': 'POST required'}, status=405), origin)
-
-    ip = _get_ip(request)
-    if not _rate_limit(ip, limit=30, window=60):
-        return _cors(JsonResponse({'error': 'Too many requests'}, status=429), origin)
-
-    try:
-        body = json.loads(request.body)
-    except (json.JSONDecodeError, ValueError):
-        return _cors(JsonResponse({'error': 'Invalid JSON'}, status=400), origin)
-
-    query = (body.get('query') or '').strip().lower()
-    if not query:
-        return _cors(JsonResponse({'error': 'query is required'}, status=400), origin)
-
-    answer = _kb_search(query)
-    return _cors(JsonResponse({'answer': answer}), origin)
-
-
-# ── Server-side KB (mirrors rag-kb.js) ───────────────────────
+# ── Server-side Knowledge Base ───────────────────────────────
 _KB = [
     {
         'keywords': ['get started', 'start', 'begin', 'how do i', 'first step',
@@ -233,6 +90,10 @@ _KB = [
         'keywords': ['who', 'team', 'about', 'data scientist', 'company', 'milan'],
         'answer': "We're data scientists based in Milan, Italy.\n\nWe got tired of AI demos that don't survive contact with real business data — so we build tools that actually work in production.\n\nNo buzzwords. No overselling. If AI won't help your problem, we say so."
     },
+    {
+        'keywords': ['service', 'services', 'offer', 'what do you do', 'solutions', 'products', 'build'],
+        'answer': "We provide three core AI solutions:\n\n1. TaalumaMail: Automatic extraction of orders/invoices from WhatsApp & Email\n2. Custom AI Chatbots: Trained on your private business data\n3. Data Dashboards: Analytics and forecasting tied to your ERP\n\n📧 talumaflow@gmail.com\n📱 +39 328 9741517"
+    },
 ]
 
 _FALLBACK = (
@@ -251,3 +112,109 @@ def _kb_search(query: str) -> str:
             best_score = score
             best = entry
     return best['answer'] if best_score > 0 else _FALLBACK
+
+
+# ── /api/public/extract/ (TaalumaMail Extraction Demo) ────────
+@csrf_exempt
+@never_cache
+def public_extract(request):
+    """
+    Extracts structured order details (items, quantities, totals)
+    from raw text using Ollama.
+    """
+    origin = _get_origin(request)
+
+    if request.method == 'OPTIONS':
+        return _cors_preflight(origin)
+
+    if request.method != 'POST':
+        return _cors(JsonResponse({'error': 'POST required'}, status=405), origin)
+
+    ip = _get_ip(request)
+    if not _rate_limit(ip, limit=30, window=60):
+        return _cors(JsonResponse({'error': 'Too many requests'}, status=429), origin)
+
+    try:
+        body = json.loads(request.body)
+    except (json.JSONDecodeError, ValueError):
+        return _cors(JsonResponse({'error': 'Invalid JSON'}, status=400), origin)
+
+    text = (body.get('text') or body.get('prompt') or '').strip()
+    if not text:
+        return _cors(JsonResponse({'error': 'text is required'}, status=400), origin)
+
+    system_prompt = (
+        "You are an order extraction engine. Extract items, quantities, unit prices, "
+        "and client details from the input text and return ONLY valid JSON."
+    )
+
+    try:
+        from erp.services.health import call_ollama
+        llm_response = call_ollama(prompt=text, system=system_prompt)
+        return _cors(JsonResponse({'result': llm_response}), origin)
+    except Exception as exc:
+        logger.error(f"[PublicAPI] Extraction failed: {exc}")
+        return _cors(JsonResponse({'error': 'Extraction service unavailable'}, status=500), origin)
+
+
+# ── /api/public/chat/ (Website Chatbot Demo) ────────────────
+@csrf_exempt
+@never_cache
+def public_chat(request):
+    """
+    Handles chatbot queries via fast KB matching, falling back
+    to Ollama LLM for unmatched queries.
+    """
+    origin = _get_origin(request)
+
+    if request.method == 'OPTIONS':
+        return _cors_preflight(origin)
+
+    if request.method != 'POST':
+        return _cors(JsonResponse({'error': 'POST required'}, status=405), origin)
+
+    ip = _get_ip(request)
+    if not _rate_limit(ip, limit=30, window=60):
+        return _cors(JsonResponse({'error': 'Too many requests'}, status=429), origin)
+
+    try:
+        body = json.loads(request.body)
+    except (json.JSONDecodeError, ValueError):
+        return _cors(JsonResponse({'error': 'Invalid JSON'}, status=400), origin)
+
+    query = (body.get('query') or body.get('prompt') or '').strip().lower()
+    system_prompt = body.get('system_prompt', '')
+
+    if not query:
+        return _cors(JsonResponse({'error': 'query is required'}, status=400), origin)
+
+    # 1. Static KB Search
+    answer = _kb_search(query)
+
+    # 2. Ollama LLM Fallback
+    if answer == _FALLBACK:
+        try:
+            from erp.services.health import call_ollama
+            llm_response = call_ollama(prompt=query, system=system_prompt)
+            if llm_response:
+                answer = llm_response
+        except Exception as exc:
+            logger.error(f"[PublicAPI] Ollama call failed: {exc}")
+
+    return _cors(JsonResponse({'answer': answer}), origin)
+
+
+# ── /api/public/health/ ──────────────────────────────────────
+@csrf_exempt
+@never_cache
+def public_health(request):
+    origin = _get_origin(request)
+    if request.method == 'OPTIONS':
+        return _cors_preflight(origin)
+
+    try:
+        from erp.services.health import check_ollama
+        status = check_ollama()
+        return _cors(JsonResponse({'ok': True, 'model': status.get('model', 'mistral:latest')}), origin)
+    except Exception:
+        return _cors(JsonResponse({'ok': False}), origin)

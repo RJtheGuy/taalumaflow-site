@@ -1,13 +1,4 @@
-/**
- * chat.js
- * Chat UI wired to:
- *   1. Backend /api/public/chat/ (if BACKEND_URL configured)
- *   2. Semantic engine chat-engine.js (Transformers.js, browser)
- *   3. Keyword KB fallback (instant, while model loads)
- *
- * After 2 user exchanges, inserts qualifying questions.
- * After qualifying, renders a pre-filled contact CTA.
- */
+
 import { PUBLIC_API, IS_BACKEND_CONFIGURED } from './config.js';
 import { initEngine, answer as engineAnswer }  from './chat-engine.js';
 
