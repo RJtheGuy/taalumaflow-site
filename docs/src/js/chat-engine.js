@@ -32,7 +32,9 @@ function dot(a, b) {
 function buildIndex() {
   _questions = []; _answers = [];
   for (const entry of KB) {
-    for (const q of entry.questions) {
+    // Use questions for semantic similarity embeddings
+    const qs = entry.questions || [];
+    for (const q of qs) {
       _questions.push(q);
       _answers.push(entry.answer);
     }
@@ -109,7 +111,9 @@ function keywordFallback(query) {
   let best = null, bestScore = 0;
   for (const entry of KB) {
     let score = 0;
-    for (const kw of entry.questions) {
+    // Use keywords array for fast matching (broader coverage)
+    const kws = entry.keywords || entry.questions || [];
+    for (const kw of kws) {
       if (q.includes(kw.toLowerCase())) score += kw.split(' ').length;
     }
     if (score > bestScore) { bestScore = score; best = entry; }
