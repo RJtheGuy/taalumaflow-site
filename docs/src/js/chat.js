@@ -1,4 +1,3 @@
-
 import { PUBLIC_API, IS_BACKEND_CONFIGURED } from './config.js';
 import { initEngine, answer as engineAnswer }  from './chat-engine.js';
 
@@ -16,11 +15,13 @@ function timeStr() {
   return new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
 }
 
-function appendMsg(container, role, text) {
+function appendMsg(container, role, text, isHtml = false) {
   const div = document.createElement('div');
   div.className = `msg ${role}`;
-  const html = role === 'bot' ? fmt(text) :
-    text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  
+  const bubbleContent = isHtml ? text : text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const html = role === 'bot' ? (isHtml ? bubbleContent : fmt(bubbleContent)) : bubbleContent;
+  
   div.innerHTML = `<div class="msg-bubble">${html}</div><div class="msg-time">${timeStr()}</div>`;
   container.appendChild(div);
   requestAnimationFrame(() => { container.scrollTop = container.scrollHeight; });
@@ -78,7 +79,7 @@ function renderQualifyingCTA(container, answers) {
        style="display:inline-block;padding:9px 18px;border-radius:8px;
               background:linear-gradient(135deg,var(--blue2),var(--blue));
               color:#fff;font-size:12px;font-weight:600;text-decoration:none">
-       📧 Send demo request →
+        📧 Send demo request →
     </a>
     <div style="font-size:10px;color:var(--text3);margin-top:8px">
       Or WhatsApp: <a href="https://wa.me/393289741517" style="color:var(--blue)">+39 328 9741517</a>
@@ -91,18 +92,17 @@ function renderQualifyingCTA(container, answers) {
 /* ── Core send handler ───────────────────────────────────── */
 function createHandler(msgs, typingEl, input, sendBtn) {
   let exchangeCount = 0;
-  let qualifyingStep = -1; // -1 = not started
+  let qualifyingStep = -1;
   const qualifyingAnswers = [];
   let statusMsg = null;
 
   function updateStatus(text) {
     if (!text) { statusMsg?.remove(); statusMsg = null; return; }
+    const htmlContent = `<span style="color:var(--text3);font-size:12px">⏳ ${text}</span>`;
     if (!statusMsg) {
-      statusMsg = appendMsg(msgs, 'bot',
-        `<span style="color:var(--text3);font-size:12px">⏳ ${text}</span>`);
+      statusMsg = appendMsg(msgs, 'bot', htmlContent, true);
     } else {
-      statusMsg.querySelector('.msg-bubble').innerHTML =
-        `<span style="color:var(--text3);font-size:12px">⏳ ${text}</span>`;
+      statusMsg.querySelector('.msg-bubble').innerHTML = htmlContent;
     }
     msgs.scrollTop = msgs.scrollHeight;
   }
@@ -125,7 +125,6 @@ function createHandler(msgs, typingEl, input, sendBtn) {
         }, 500);
         return;
       } else {
-        // All questions answered — show CTA
         setTimeout(() => {
           renderQualifyingCTA(msgs, qualifyingAnswers);
           sendBtn.disabled = false; input.focus();
