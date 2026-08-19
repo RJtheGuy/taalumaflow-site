@@ -1,4 +1,15 @@
-
+/**
+ * ui.js
+ * ─────────────────────────────────────────────────────────────
+ * General UI utilities:
+ *   initNavScroll    — sticky nav background on scroll
+ *   initMobileNav    — drawer open/close
+ *   initScrollReveal — IntersectionObserver fade-in
+ *   initCounters     — animated hero number counters
+ *   initChartPeriods — period button toggle on analytics chart
+ *   initContactForm  — form submit with success state
+ * ─────────────────────────────────────────────────────────────
+ */
 
 export function initNavScroll(navId = 'nav') {
   const nav = document.getElementById(navId);
@@ -66,26 +77,24 @@ export function initContactForm(formId = 'contact-form', btnId = 'fbtn') {
   const btn  = document.getElementById(btnId);
   if (!form || !btn) return;
 
-  // Formspree endpoint — replace with your actual form ID from formspree.io
-  // Sign up free at formspree.io → New Form → copy the ID (e.g. xrgvkpqw)
   form.addEventListener('submit', async e => {
     e.preventDefault();
     const orig = btn.textContent;
     btn.textContent = 'Sending…';
     btn.disabled = true;
 
-    const data     = new FormData(form);
-    const name     = data.get('cf-name')    || '';
-    const company  = data.get('cf-company') || '';
-    const email    = data.get('cf-email')   || '';
-    const product  = data.get('cf-product') || '';
-    const message  = data.get('cf-message') || '';
+    // Read values directly by element ID — reliable regardless of name attributes
+    const name    = document.getElementById('cf-name')?.value.trim()    || '';
+    const company = document.getElementById('cf-company')?.value.trim() || '';
+    const email   = document.getElementById('cf-email')?.value.trim()   || '';
+    const product = document.getElementById('cf-product')?.value.trim() || '';
+    const message = document.getElementById('cf-message')?.value.trim() || '';
 
-    // Try backend send-result endpoint if configured
+    // Try backend /api/public/contact/
     try {
-      const { PUBLIC_API, IS_BACKEND_CONFIGURED } = await import('./config.js');
-      if (IS_BACKEND_CONFIGURED) {
-        const res = await fetch(`${PUBLIC_API.extract.replace('extract/','contact/')}`, {
+      const { IS_BACKEND_CONFIGURED, BACKEND_URL } = await import('./config.js');
+      if (IS_BACKEND_CONFIGURED && BACKEND_URL) {
+        const res = await fetch(`${BACKEND_URL}/api/public/contact/`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name, company, email, product, message }),
@@ -93,14 +102,19 @@ export function initContactForm(formId = 'contact-form', btnId = 'fbtn') {
         if (res.ok) {
           btn.textContent = 'Message sent ✓';
           btn.style.background = 'linear-gradient(135deg,#166534,#22c55e)';
-          setTimeout(() => { btn.textContent = orig; btn.style.background = ''; btn.disabled = false; form.reset(); }, 4000);
+          setTimeout(() => {
+            btn.textContent = orig;
+            btn.style.background = '';
+            btn.disabled = false;
+            form.reset();
+          }, 4000);
           return;
         }
       }
-    } catch { /* fall through to mailto */ }
+    } catch { /* fall through */ }
 
-    // Fallback — mailto (opens email client, always works)
-    const subject = encodeURIComponent(`Demo request — ${name} (${company})`);
+    // Fallback — compose email with data pre-filled
+    const subject = encodeURIComponent(`Demo request — ${name}${company ? ' ('+company+')' : ''}`);
     const body    = encodeURIComponent(
       `Name: ${name}\nCompany: ${company}\nEmail: ${email}\nInterested in: ${product}\n\nMessage:\n${message}`
     );

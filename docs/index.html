@@ -337,13 +337,13 @@
       </div>
       <form class="contact-form rv d1" id="contact-form" novalidate>
         <div class="fl-2">
-          <div class="fl"><label for="cf-name">Name</label><input class="fi" id="cf-name" type="text" placeholder="Mario Rossi" required autocomplete="name"></div>
-          <div class="fl"><label for="cf-company">Company</label><input class="fi" id="cf-company" type="text" placeholder="Rossi Srl" autocomplete="organization"></div>
+          <div class="fl"><label for="cf-name">Name</label><input class="fi" id="cf-name" name="cf-name" type="text" placeholder="Mario Rossi" required autocomplete="name"></div>
+          <div class="fl"><label for="cf-company">Company</label><input class="fi" id="cf-company" name="cf-company" type="text" placeholder="Rossi Srl" autocomplete="organization"></div>
         </div>
-        <div class="fl"><label for="cf-email">Email</label><input class="fi" id="cf-email" type="email" placeholder="mario@rossi.it" required autocomplete="email"></div>
+        <div class="fl"><label for="cf-email">Email</label><input class="fi" id="cf-email" name="cf-email" type="email" placeholder="mario@rossi.it" required autocomplete="email"></div>
         <div class="fl">
           <label for="cf-product">I'm interested in</label>
-          <select class="fs" id="cf-product">
+          <select class="fs" id="cf-product" name="cf-product">
             <option value="">Select...</option>
             <option>TaalumaMail — order extraction</option>
             <option>Custom AI chatbot</option>
@@ -354,7 +354,7 @@
             <option>Not sure — tell me what fits</option>
           </select>
         </div>
-        <div class="fl"><label for="cf-message">Current challenge</label><textarea class="ft" id="cf-message" placeholder="E.g. We process 40 orders/day by WhatsApp and enter them manually into our gestionale..."></textarea></div>
+        <div class="fl"><label for="cf-message">Current challenge</label><textarea class="ft" id="cf-message" name="cf-message" placeholder="E.g. We process 40 orders/day by WhatsApp and enter them manually into our gestionale..."></textarea></div>
         <button type="submit" class="form-btn" id="fbtn">Send →</button>
       </form>
     </div>
