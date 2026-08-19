@@ -1,24 +1,6 @@
-/**
- * demo.js
- * ─────────────────────────────────────────────────────────────
- * Two interactive features:
- *
- * 1. initExtractionDemo()
- *    Calls /api/public/extract/ on the Django backend.
- *    Your real Mistral model does the extraction.
- *    Falls back to a clear "backend not connected" message
- *    with instructions to contact for a live demo.
- *
- * 2. initCSVDashboard()
- *    Pure client-side CSV upload → live charts.
- *    D3-style SVG charts, zero data sent anywhere.
- * ─────────────────────────────────────────────────────────────
- */
+
 import { PUBLIC_API, IS_BACKEND_CONFIGURED } from './config.js';
 
-/* ══════════════════════════════════════════════════════════════
-   EXAMPLE ORDER MESSAGES
-══════════════════════════════════════════════════════════════ */
 const EXAMPLES = [
   {
     label: 'Italian WhatsApp (informal)',
@@ -81,14 +63,83 @@ export function initExtractionDemo() {
     resetOutput(resultEl, emptyEl, loadingEl);
   });
 
-  runBtn.addEventListener('click', () =>
-    runExtraction(textarea, runBtn, resultEl, emptyEl, loadingEl)
-  );
+  let hasEmail = false;
+
+  runBtn.addEventListener('click', () => {
+    // On first run — show email capture modal
+    if (!hasEmail) {
+      showEmailCapture(
+        (email) => {
+          hasEmail = true;
+          // Store email for send row
+          const sendInput = document.getElementById('demo-send-email');
+          if (sendInput && email) sendInput.value = email;
+          runExtraction(textarea, runBtn, resultEl, emptyEl, loadingEl);
+        },
+        () => {
+          // Skip — run without email
+          hasEmail = true;
+          runExtraction(textarea, runBtn, resultEl, emptyEl, loadingEl);
+        }
+      );
+    } else {
+      runExtraction(textarea, runBtn, resultEl, emptyEl, loadingEl);
+    }
+  });
 
   textarea.addEventListener('keydown', e => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
       e.preventDefault(); runBtn.click();
     }
+  });
+}
+
+function showEmailCapture(onSubmit, onSkip) {
+  // Remove any existing modal
+  document.getElementById('email-capture-modal')?.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'email-capture-modal';
+  modal.innerHTML = `
+    <div class="ecm-backdrop"></div>
+    <div class="ecm-box">
+      <div class="ecm-title">One second before we run the AI 🤖</div>
+      <div class="ecm-sub">Drop your email to get the full extraction result sent to you — or skip and just see it here.</div>
+      <input class="ecm-input" id="ecm-email" type="email"
+        placeholder="your@email.com" autocomplete="email">
+      <div class="ecm-actions">
+        <button class="ecm-btn-primary" id="ecm-submit">
+          Extract &amp; send me the result →
+        </button>
+        <button class="ecm-btn-skip" id="ecm-skip">
+          Just show me the demo
+        </button>
+      </div>
+      <div class="ecm-note">No spam. We use this to send you the extracted document.</div>
+    </div>`;
+  document.body.appendChild(modal);
+
+  // Focus email input
+  setTimeout(() => document.getElementById('ecm-email')?.focus(), 100);
+
+  document.getElementById('ecm-submit').addEventListener('click', () => {
+    const email = document.getElementById('ecm-email')?.value.trim();
+    modal.remove();
+    onSubmit(email);
+  });
+
+  document.getElementById('ecm-skip').addEventListener('click', () => {
+    modal.remove();
+    onSkip();
+  });
+
+  document.getElementById('ecm-email')?.addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('ecm-submit').click();
+    if (e.key === 'Escape') { modal.remove(); onSkip(); }
+  });
+
+  modal.querySelector('.ecm-backdrop').addEventListener('click', () => {
+    modal.remove(); onSkip();
   });
 }
 

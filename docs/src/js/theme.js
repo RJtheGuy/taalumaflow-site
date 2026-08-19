@@ -1,7 +1,4 @@
-/**
- * theme.js
- * Dark / light mode toggle with localStorage persistence.
- */
+
 const KEY = 'tf-theme';
 
 function apply(theme) {

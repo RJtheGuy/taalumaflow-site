@@ -1,10 +1,4 @@
-/* ═══════════════════════════════════════════════════════════
-   main.css — TaalumaFlow website styles
-   All colours are CSS custom properties so dark/light toggle
-   is a single attribute swap on <html>.
-═══════════════════════════════════════════════════════════ */
 
-/* ── Theme tokens ─────────────────────────────────────────── */
 :root {
   --tr: 0.35s cubic-bezier(.4,0,.2,1);
 }
@@ -663,3 +657,58 @@ footer { border-top: 1px solid var(--border); padding: 36px 48px; display: flex;
   color:#fff;border-color:transparent;
 }
 .demo-pdf-btn:hover { opacity:.88;color:#fff; }
+
+/* ── Email capture modal ──────────────────────────────────── */
+#email-capture-modal {
+  position:fixed;inset:0;z-index:1000;
+  display:flex;align-items:center;justify-content:center;
+  padding:20px;
+}
+.ecm-backdrop {
+  position:absolute;inset:0;
+  background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);
+}
+.ecm-box {
+  position:relative;z-index:1;
+  background:var(--bg2);border:1px solid var(--border2);
+  border-radius:20px;padding:36px;max-width:440px;width:100%;
+  box-shadow:0 24px 80px rgba(0,0,0,0.5);
+  animation:msgIn .3s ease;
+}
+.ecm-title {
+  font-family:'Space Grotesk',sans-serif;
+  font-size:20px;font-weight:700;color:var(--text);
+  letter-spacing:-0.02em;margin-bottom:10px;
+}
+.ecm-sub {
+  font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:20px;
+}
+.ecm-input {
+  width:100%;padding:12px 14px;border-radius:10px;
+  background:var(--surface2);border:1.5px solid var(--border);
+  color:var(--text);font-size:14px;font-family:'Inter',sans-serif;
+  outline:none;margin-bottom:14px;
+  transition:border-color .2s;
+}
+.ecm-input:focus { border-color:var(--blue); }
+.ecm-input::placeholder { color:var(--text3); }
+.ecm-actions { display:flex;flex-direction:column;gap:10px; }
+.ecm-btn-primary {
+  width:100%;padding:13px;border-radius:10px;
+  background:linear-gradient(135deg,var(--blue2),var(--blue));
+  color:#fff;font-size:14px;font-weight:600;
+  border:none;cursor:pointer;letter-spacing:.02em;
+  transition:transform .2s,opacity .2s;
+}
+.ecm-btn-primary:hover { transform:translateY(-1px);opacity:.9; }
+.ecm-btn-skip {
+  width:100%;padding:11px;border-radius:10px;
+  background:transparent;border:1.5px solid var(--border);
+  color:var(--text3);font-size:13px;cursor:pointer;
+  transition:all .2s;
+}
+.ecm-btn-skip:hover { border-color:var(--border2);color:var(--text2); }
+.ecm-note {
+  font-size:10px;color:var(--text3);
+  text-align:center;margin-top:12px;
+}

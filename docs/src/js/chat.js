@@ -1,9 +1,4 @@
-/**
- * chat.js — Friendly conversational chatbot
- * Routes: backend /api/public/chat/ → semantic engine → keyword KB
- * Qualifying questions only after 4 substantive exchanges, not 2
- * Greetings handled naturally without fallback
- */
+
 import { PUBLIC_API, IS_BACKEND_CONFIGURED } from './config.js';
 import { initEngine, answer as engineAnswer, FALLBACK } from './chat-engine.js';
 
