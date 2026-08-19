@@ -96,7 +96,6 @@ export function initExtractionDemo() {
           capturedEmail = 'skipped';
           runExtraction(textarea, runBtn, resultEl, emptyEl, loadingEl, '');
         }
-        }
       );
     } else {
       runExtraction(textarea, runBtn, resultEl, emptyEl, loadingEl, capturedEmail === 'skipped' ? '' : capturedEmail);
