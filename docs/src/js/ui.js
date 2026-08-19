@@ -1,15 +1,4 @@
-/**
- * ui.js
- * ─────────────────────────────────────────────────────────────
- * General UI utilities:
- *   initNavScroll    — sticky nav background on scroll
- *   initMobileNav    — drawer open/close
- *   initScrollReveal — IntersectionObserver fade-in
- *   initCounters     — animated hero number counters
- *   initChartPeriods — period button toggle on analytics chart
- *   initContactForm  — form submit with success state
- * ─────────────────────────────────────────────────────────────
- */
+
 
 export function initNavScroll(navId = 'nav') {
   const nav = document.getElementById(navId);
@@ -118,4 +107,5 @@ export function initContactForm(formId = 'contact-form', btnId = 'fbtn') {
     window.location.href = `mailto:talumaflow@gmail.com?subject=${subject}&body=${body}`;
     btn.textContent = orig;
     btn.disabled = false;
-})
+  });
+}
