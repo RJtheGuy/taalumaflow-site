@@ -1,4 +1,4 @@
-export const BACKEND_URL = 'https://spiritual-tablet-admissions-evanescence.trycloudflare.com';
+export const BACKEND_URL = 'https://back-unto-intensity-medline.trycloudflare.com';
 
 export const PUBLIC_API = {
   extract : `${BACKEND_URL}/api/public/extract/`,

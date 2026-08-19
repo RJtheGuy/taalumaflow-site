@@ -77,17 +77,45 @@ export function initContactForm(formId = 'contact-form', btnId = 'fbtn') {
   const btn  = document.getElementById(btnId);
   if (!form || !btn) return;
 
-  form.addEventListener('submit', e => {
+  // Formspree endpoint — replace with your actual form ID from formspree.io
+  // Sign up free at formspree.io → New Form → copy the ID (e.g. xrgvkpqw)
+  const FORMSPREE_ID = 'xpwzgnjv'; // ← update this with your real ID
+
+  form.addEventListener('submit', async e => {
     e.preventDefault();
     const orig = btn.textContent;
-    btn.textContent = 'Message sent ✓';
-    btn.style.background = 'linear-gradient(135deg,#166534,#22c55e)';
+    btn.textContent = 'Sending…';
     btn.disabled = true;
-    setTimeout(() => {
+
+    try {
+      const res = await fetch(`https://formspree.io/f/${FORMSPREE_ID}`, {
+        method: 'POST',
+        headers: { 'Accept': 'application/json' },
+        body: new FormData(form),
+      });
+
+      if (res.ok) {
+        btn.textContent = 'Message sent ✓';
+        btn.style.background = 'linear-gradient(135deg,#166534,#22c55e)';
+        setTimeout(() => {
+          btn.textContent = orig;
+          btn.style.background = '';
+          btn.disabled = false;
+          form.reset();
+        }, 4000);
+      } else {
+        throw new Error('Form submission failed');
+      }
+    } catch {
+      // Fallback — open email client
       btn.textContent = orig;
-      btn.style.background = '';
       btn.disabled = false;
-      form.reset();
-    }, 4000);
+      const data = new FormData(form);
+      const subject = encodeURIComponent('Demo request — TaalumaFlow');
+      const body = encodeURIComponent(
+        `Name: ${data.get('cf-name')||''}\nCompany: ${data.get('cf-company')||''}\nEmail: ${data.get('cf-email')||''}\nInterested in: ${data.get('cf-product')||''}\n\nMessage:\n${data.get('cf-message')||''}`
+      );
+      window.open(`mailto:talumaflow@gmail.com?subject=${subject}&body=${body}`);
+    }
   });
 }
