@@ -1,6 +1,24 @@
-
+/**
+ * demo.js
+ * ─────────────────────────────────────────────────────────────
+ * Two interactive features:
+ *
+ * 1. initExtractionDemo()
+ *    Calls /api/public/extract/ on the Django backend.
+ *    Your real Mistral model does the extraction.
+ *    Falls back to a clear "backend not connected" message
+ *    with instructions to contact for a live demo.
+ *
+ * 2. initCSVDashboard()
+ *    Pure client-side CSV upload → live charts.
+ *    D3-style SVG charts, zero data sent anywhere.
+ * ─────────────────────────────────────────────────────────────
+ */
 import { PUBLIC_API, IS_BACKEND_CONFIGURED } from './config.js';
 
+/* ══════════════════════════════════════════════════════════════
+   EXAMPLE ORDER MESSAGES
+══════════════════════════════════════════════════════════════ */
 const EXAMPLES = [
   {
     label: 'Italian WhatsApp (informal)',
@@ -63,27 +81,25 @@ export function initExtractionDemo() {
     resetOutput(resultEl, emptyEl, loadingEl);
   });
 
-  let hasEmail = false;
+  let capturedEmail = '';
 
   runBtn.addEventListener('click', () => {
-    // On first run — show email capture modal
-    if (!hasEmail) {
+    if (!capturedEmail) {
       showEmailCapture(
         (email) => {
-          hasEmail = true;
-          // Store email for send row
+          capturedEmail = email || '';
           const sendInput = document.getElementById('demo-send-email');
           if (sendInput && email) sendInput.value = email;
-          runExtraction(textarea, runBtn, resultEl, emptyEl, loadingEl);
+          runExtraction(textarea, runBtn, resultEl, emptyEl, loadingEl, capturedEmail);
         },
         () => {
-          // Skip — run without email
-          hasEmail = true;
-          runExtraction(textarea, runBtn, resultEl, emptyEl, loadingEl);
+          capturedEmail = 'skipped';
+          runExtraction(textarea, runBtn, resultEl, emptyEl, loadingEl, '');
+        }
         }
       );
     } else {
-      runExtraction(textarea, runBtn, resultEl, emptyEl, loadingEl);
+      runExtraction(textarea, runBtn, resultEl, emptyEl, loadingEl, capturedEmail === 'skipped' ? '' : capturedEmail);
     }
   });
 
@@ -149,7 +165,7 @@ function resetOutput(resultEl, emptyEl, loadingEl) {
   if (emptyEl)   { emptyEl.style.display   = 'flex'; }
 }
 
-async function runExtraction(textarea, runBtn, resultEl, emptyEl, loadingEl) {
+async function runExtraction(textarea, runBtn, resultEl, emptyEl, loadingEl, autoEmail = '') {
   const text = textarea.value.trim();
   if (!text) return;
 
@@ -177,6 +193,14 @@ async function runExtraction(textarea, runBtn, resultEl, emptyEl, loadingEl) {
     if (loadingEl) loadingEl.style.display = 'none';
     renderResult(data, resultEl);
 
+    // Auto-send email if user provided one in the modal
+    if (autoEmail && autoEmail !== 'skipped') {
+      const sendInput = document.getElementById('demo-send-email');
+      if (sendInput) sendInput.value = autoEmail;
+      // Send via backend
+      sendExtractionEmail(autoEmail, data);
+    }
+
   } catch (err) {
     if (loadingEl) loadingEl.style.display = 'none';
     renderError(err, resultEl, emptyEl);
@@ -184,6 +208,35 @@ async function runExtraction(textarea, runBtn, resultEl, emptyEl, loadingEl) {
 
   runBtn.disabled = false;
   runBtn.innerHTML = '<span>▶</span> Extract order';
+}
+
+async function sendExtractionEmail(email, data) {
+  try {
+    const { BACKEND_URL, IS_BACKEND_CONFIGURED } = await import('./config.js');
+    if (!IS_BACKEND_CONFIGURED) return;
+
+    const items    = data.items || [];
+    const subtotal = items.reduce((s, i) => s + (i.qty * i.unit_price), 0);
+    const vat      = subtotal * 0.22;
+    const total    = subtotal + vat;
+
+    const res = await fetch(`${BACKEND_URL}/api/public/send-result/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, result: data }),
+    });
+
+    if (res.ok) {
+      // Show subtle confirmation
+      const note = document.createElement('div');
+      note.style.cssText = 'text-align:center;font-size:11px;color:var(--green);margin-top:8px';
+      note.textContent = `✓ Result sent to ${email}`;
+      document.getElementById('demo-result')?.appendChild(note);
+      setTimeout(() => note.remove(), 5000);
+    }
+  } catch (err) {
+    console.warn('[Demo] Email send failed:', err.message);
+  }
 }
 
 function renderResult(data, container) {
