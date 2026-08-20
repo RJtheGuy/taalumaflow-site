@@ -1,24 +1,6 @@
-/**
- * demo.js
- * ─────────────────────────────────────────────────────────────
- * Two interactive features:
- *
- * 1. initExtractionDemo()
- *    Calls /api/public/extract/ on the Django backend.
- *    Your real Mistral model does the extraction.
- *    Falls back to a clear "backend not connected" message
- *    with instructions to contact for a live demo.
- *
- * 2. initCSVDashboard()
- *    Pure client-side CSV upload → live charts.
- *    D3-style SVG charts, zero data sent anywhere.
- * ─────────────────────────────────────────────────────────────
- */
+
 import { PUBLIC_API, IS_BACKEND_CONFIGURED } from './config.js';
 
-/* ══════════════════════════════════════════════════════════════
-   EXAMPLE ORDER MESSAGES
-══════════════════════════════════════════════════════════════ */
 const EXAMPLES = [
   {
     label: 'Italian WhatsApp (informal)',
@@ -53,9 +35,6 @@ Thank you`,
 
 let currentExample = 0;
 
-/* ══════════════════════════════════════════════════════════════
-   1. EXTRACTION DEMO
-══════════════════════════════════════════════════════════════ */
 export function initExtractionDemo() {
   const textarea  = document.getElementById('demo-input');
   const runBtn    = document.getElementById('demo-run-btn');
@@ -381,9 +360,6 @@ function renderError(err, resultEl, emptyEl) {
   }
 }
 
-/* ══════════════════════════════════════════════════════════════
-   2. CSV DASHBOARD — 100% client-side
-══════════════════════════════════════════════════════════════ */
 export function initCSVDashboard() {
   const dropzone  = document.getElementById('csv-dropzone');
   const fileInput = document.getElementById('csv-file-input');
@@ -552,10 +528,7 @@ function drawLine(id) {
   </svg>`;
 }
 
-/* ══════════════════════════════════════════════════════════════
-   PDF GENERATION — client-side, no server needed
-   Uses the browser's print API to generate a clean PDF
-══════════════════════════════════════════════════════════════ */
+
 
 export function generatePDF(data) {
   const items   = data.items || [];
