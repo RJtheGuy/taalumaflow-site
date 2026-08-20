@@ -1027,16 +1027,13 @@ function renderResult(data, container) {
 
       if (!IS_BACKEND_CONFIGURED) throw new Error('no_backend');
 
-      // Generate PDF as base64 for attachment
-      const pdfBase64 = generatePDFBase64(data);
-
+      // Send via backend - backend generates the PDF
       const res = await fetch(`${BACKEND_URL}/api/public/send-result/`, {
         method : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body   : JSON.stringify({
-          email     : value,
-          result    : data,
-          pdf_base64: pdfBase64,
+          email : value,
+          result: data,
         }),
       });
 
