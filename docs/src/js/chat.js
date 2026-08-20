@@ -134,20 +134,27 @@ function makeHandler(msgs, typingEl, input, sendBtn) {
 
     // ── Qualifying flow active ────────────────────────────
     if (qStep >= 0) {
-      qAnswers.push(text);
-      if (qStep < QUALIFY_Q.length - 1) {
-        qStep++;
+      // If user asks a real question instead of answering, exit qualifying and answer
+      const isRealQuestion = text.includes('?') || text.split(' ').length > 4;
+      if (isRealQuestion && qStep === 0) {
+        // Reset qualifying and answer the question normally
+        qStep = -1;
+      } else {
+        qAnswers.push(text);
+        if (qStep < QUALIFY_Q.length - 1) {
+          qStep++;
+          setTimeout(() => {
+            appendMsg(msgs, 'bot', fmt(QUALIFY_Q[qStep]));
+            sendBtn.disabled = false; input.focus();
+          }, 400);
+          return;
+        }
         setTimeout(() => {
-          appendMsg(msgs, 'bot', fmt(QUALIFY_Q[qStep]));
+          renderCTA(msgs, qAnswers);
           sendBtn.disabled = false; input.focus();
         }, 400);
         return;
       }
-      setTimeout(() => {
-        renderCTA(msgs, qAnswers);
-        sendBtn.disabled = false; input.focus();
-      }, 400);
-      return;
     }
 
     // ── Handle greetings instantly ────────────────────────
