@@ -324,7 +324,18 @@
 
 
 
+"""
+backend/erp/views_public.py
+────────────────────────────────────────────────────────────────
+Public API endpoints for talumaflow.com demos.
+No auth. Rate-limited. CORS open to talumaflow.com + localhost.
 
+Endpoints:
+  POST /api/public/extract/
+  POST /api/public/chat/
+  GET  /api/public/health/
+────────────────────────────────────────────────────────────────
+"""
 import json
 import time
 import logging
@@ -336,6 +347,9 @@ from django.views.decorators.cache import never_cache
 
 logger = logging.getLogger(__name__)
 
+# ── CORS ─────────────────────────────────────────────────────
+# Tunnel URL is added dynamically — any *.trycloudflare.com or
+# *.ts.net origin is allowed during development.
 _ALWAYS_ALLOWED = {
     'https://talumaflow.com',
     'https://www.talumaflow.com',
@@ -392,6 +406,7 @@ def _ip(request) -> str:
     return xff.split(',')[0].strip() if xff else request.META.get('REMOTE_ADDR', 'unknown')
 
 
+# ── /api/public/extract/ ─────────────────────────────────────
 @csrf_exempt
 @never_cache
 def public_extract(request):
@@ -463,7 +478,7 @@ def public_extract(request):
         )
 
 
-
+# ── /api/public/health/ ──────────────────────────────────────
 @csrf_exempt
 @never_cache
 def public_health(request):
@@ -479,6 +494,7 @@ def public_health(request):
         return _json({'ok': False, 'error': str(exc)}, 200, origin)
 
 
+# ── /api/public/chat/ ────────────────────────────────────────
 @csrf_exempt
 @never_cache
 def public_chat(request):
@@ -516,6 +532,7 @@ def public_chat(request):
     return _json({'answer': answer}, 200, origin)
 
 
+# ── /api/public/contact/ ─────────────────────────────────────
 @csrf_exempt
 @never_cache
 def public_contact(request):
@@ -573,6 +590,141 @@ def public_contact(request):
         return _cors(JsonResponse({'error': str(exc)}, 500), origin)
 
 
+def _generate_demo_pdf(result: dict, doc_num: str, subtotal: float, vat: float, total: float) -> bytes | None:
+    """Generate a real PDF using reportlab. Returns bytes or None on failure."""
+    try:
+        import io
+        from reportlab.lib.pagesizes import A4
+        from reportlab.lib.units import mm
+        from reportlab.lib import colors
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+        from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+
+        buf = io.BytesIO()
+        doc = SimpleDocTemplate(buf, pagesize=A4,
+                                leftMargin=20*mm, rightMargin=20*mm,
+                                topMargin=20*mm, bottomMargin=20*mm)
+
+        styles = getSampleStyleSheet()
+        blue   = colors.HexColor('#2563EB')
+        purple = colors.HexColor('#9B5DE5')
+        grey   = colors.HexColor('#888888')
+        light  = colors.HexColor('#f0f2ff')
+
+        title_style = ParagraphStyle('Title', parent=styles['Normal'],
+                                     fontSize=22, textColor=blue, fontName='Helvetica-Bold',
+                                     spaceAfter=2)
+        sub_style   = ParagraphStyle('Sub', parent=styles['Normal'],
+                                     fontSize=9, textColor=grey)
+        label_style = ParagraphStyle('Label', parent=styles['Normal'],
+                                     fontSize=8, textColor=grey, fontName='Helvetica-Bold',
+                                     spaceBefore=8, spaceAfter=2)
+        body_style  = ParagraphStyle('Body', parent=styles['Normal'], fontSize=11)
+
+        items = result.get('items', [])
+        story = []
+
+        # ── Header ────────────────────────────────────────────
+        header_data = [
+            [Paragraph('<font color="#2563EB"><b>Taluma</b></font><font color="#9B5DE5">Flow</font>', styles['Normal']),
+             Paragraph(f'<b>{doc_num}</b><br/><font color="#888888" size="9">{__import__("datetime").date.today().strftime("%d/%m/%Y")}</font><br/><font color="#2563EB" size="9">PREVENTIVO / FATTURA</font>', styles['Normal'])],
+        ]
+        header_table = Table(header_data, colWidths=['60%', '40%'])
+        header_table.setStyle(TableStyle([
+            ('FONTSIZE', (0,0), (-1,-1), 22),
+            ('ALIGN', (1,0), (1,0), 'RIGHT'),
+            ('LINEBELOW', (0,0), (-1,0), 1.5, blue),
+            ('BOTTOMPADDING', (0,0), (-1,-1), 12),
+        ]))
+        story.append(header_table)
+        story.append(Spacer(1, 6*mm))
+
+        # ── Customer ──────────────────────────────────────────
+        story.append(Paragraph('CUSTOMER', label_style))
+        story.append(Paragraph(f'<b>{result.get("client_name") or "Unknown"}</b>', body_style))
+        if result.get('client_address'):
+            story.append(Paragraph(result['client_address'], sub_style))
+        if result.get('client_email'):
+            story.append(Paragraph(result['client_email'], sub_style))
+        story.append(Spacer(1, 6*mm))
+
+        # ── Items table ───────────────────────────────────────
+        story.append(Paragraph('ORDER ITEMS', label_style))
+        table_data = [['Description', 'Qty', 'Unit Price', 'Total']]
+        for i in items:
+            qty   = float(i.get('qty', 0))
+            price = float(i.get('unit_price', 0))
+            table_data.append([
+                i.get('description', ''),
+                str(int(qty)),
+                f'€ {price:.2f}',
+                f'€ {qty*price:.2f}',
+            ])
+
+        item_table = Table(table_data, colWidths=['55%','10%','17.5%','17.5%'])
+        item_table.setStyle(TableStyle([
+            ('BACKGROUND',   (0,0), (-1,0), light),
+            ('FONTNAME',     (0,0), (-1,0), 'Helvetica-Bold'),
+            ('FONTSIZE',     (0,0), (-1,-1), 10),
+            ('TEXTCOLOR',    (0,0), (-1,0), grey),
+            ('ALIGN',        (1,0), (-1,-1), 'RIGHT'),
+            ('LINEBELOW',    (0,0), (-1,0), 1.5, blue),
+            ('LINEBELOW',    (0,1), (-1,-1), 0.5, light),
+            ('TOPPADDING',   (0,0), (-1,-1), 7),
+            ('BOTTOMPADDING',(0,0), (-1,-1), 7),
+        ]))
+        story.append(item_table)
+        story.append(Spacer(1, 4*mm))
+
+        # ── Totals ────────────────────────────────────────────
+        totals_data = [
+            ['', '', 'Subtotal', f'€ {subtotal:.2f}'],
+            ['', '', 'VAT 22%',  f'€ {vat:.2f}'],
+            ['', '', 'TOTAL',    f'€ {total:.2f}'],
+        ]
+        totals_table = Table(totals_data, colWidths=['35%','30%','17.5%','17.5%'])
+        totals_table.setStyle(TableStyle([
+            ('ALIGN',        (2,0), (-1,-1), 'RIGHT'),
+            ('FONTSIZE',     (0,0), (-1,-1), 10),
+            ('LINEABOVE',    (2,2), (-1,2), 1.5, blue),
+            ('FONTNAME',     (2,2), (-1,2), 'Helvetica-Bold'),
+            ('TEXTCOLOR',    (2,2), (-1,2), blue),
+            ('FONTSIZE',     (2,2), (-1,2), 12),
+            ('TOPPADDING',   (0,0), (-1,-1), 5),
+            ('BOTTOMPADDING',(0,0), (-1,-1), 5),
+        ]))
+        story.append(totals_table)
+        story.append(Spacer(1, 8*mm))
+
+        # ── Confidence badge ──────────────────────────────────
+        conf = int((result.get('confidence', 1) or 1) * 100)
+        story.append(Paragraph(
+            f'<font color="#065f46">✓ AI Confidence: {conf}% — Auto-approved</font>',
+            sub_style
+        ))
+        story.append(Spacer(1, 12*mm))
+
+        # ── Footer ────────────────────────────────────────────
+        footer_data = [['Generated by TaalumaFlow · talumaflow.com', 'Payment due within 30 days']]
+        footer_table = Table(footer_data, colWidths=['60%','40%'])
+        footer_table.setStyle(TableStyle([
+            ('FONTSIZE',    (0,0), (-1,-1), 8),
+            ('TEXTCOLOR',   (0,0), (-1,-1), grey),
+            ('LINEABOVE',   (0,0), (-1,0), 0.5, light),
+            ('ALIGN',       (1,0), (1,0), 'RIGHT'),
+            ('TOPPADDING',  (0,0), (-1,-1), 6),
+        ]))
+        story.append(footer_table)
+
+        doc.build(story)
+        return buf.getvalue()
+
+    except Exception as e:
+        logger.error(f"[PDF] Generation failed: {e}")
+        return None
+
+
+# ── /api/public/send-result/ ─────────────────────────────────
 @csrf_exempt
 @never_cache
 def public_send_result(request):
@@ -601,12 +753,12 @@ def public_send_result(request):
     try:
         from django.core.mail import EmailMessage
         from django.conf import settings
-        import base64
 
         items    = result.get('items', [])
         subtotal = sum(float(i.get('qty', 0)) * float(i.get('unit_price', 0)) for i in items)
         vat      = subtotal * 0.22
         total    = subtotal + vat
+        doc_num  = f"PRV-DEMO-{int(time.time())}"
 
         lines = '\n'.join(
             f"  • {i.get('qty')}x {i.get('description')} @ €{float(i.get('unit_price',0)):.2f} = €{float(i.get('qty',0))*float(i.get('unit_price',0)):.2f}"
@@ -622,26 +774,22 @@ def public_send_result(request):
             f"Subtotal: €{subtotal:.2f}\n"
             f"VAT 22%:  €{vat:.2f}\n"
             f"Total:    €{total:.2f}\n\n"
+            f"A PDF version of this document is attached.\n\n"
             f"Want this automated for your real orders?\n"
-            f"Visit talumaflow.com or contact us:\n"
             f"📧 talumaflow@gmail.com · 📱 +39 328 9741517\n"
         )
 
         msg = EmailMessage(
-            subject='Your order extraction result — TaalumaFlow',
+            subject=f'Order extraction result — {result.get("client_name","TaalumaFlow")}',
             body=message_text,
             from_email=settings.DEFAULT_FROM_EMAIL,
             to=[email],
         )
 
-        # Attach PDF if provided
-        pdf_base64 = body.get('pdf_base64')
-        if pdf_base64:
-            try:
-                pdf_bytes = base64.b64decode(pdf_base64)
-                msg.attach('order_extraction.html', pdf_bytes, 'text/html')
-            except Exception as pdf_err:
-                logger.warning(f"[PublicAPI] PDF attach failed: {pdf_err}")
+        # Generate real PDF using reportlab
+        pdf_bytes = _generate_demo_pdf(result, doc_num, subtotal, vat, total)
+        if pdf_bytes:
+            msg.attach(f'{doc_num}.pdf', pdf_bytes, 'application/pdf')
 
         msg.send()
         logger.info(f"[PublicAPI] Result sent to {email}")
