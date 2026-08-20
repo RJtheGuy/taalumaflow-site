@@ -1,4 +1,10 @@
+/* ═══════════════════════════════════════════════════════════
+   main.css — TaalumaFlow website styles
+   All colours are CSS custom properties so dark/light toggle
+   is a single attribute swap on <html>.
+═══════════════════════════════════════════════════════════ */
 
+/* ── Theme tokens ─────────────────────────────────────────── */
 :root {
   --tr: 0.35s cubic-bezier(.4,0,.2,1);
 }
@@ -711,4 +717,24 @@ footer { border-top: 1px solid var(--border); padding: 36px 48px; display: flex;
 .ecm-note {
   font-size:10px;color:var(--text3);
   text-align:center;margin-top:12px;
+}
+
+/* ── Chat clear button ────────────────────────────────────────── */
+.cfp-clear-btn {
+  margin-left: auto;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text3);
+  font-size: 14px;
+  width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: all .2s;
+  flex-shrink: 0;
+}
+.cfp-clear-btn:hover {
+  background: var(--surface2);
+  color: var(--text);
+  border-color: var(--border2);
 }
