@@ -1,4 +1,4 @@
-// import { PUBLIC_API, IS_BACKEND_CONFIGURED } from './config.js';
+import { PUBLIC_API, IS_BACKEND_CONFIGURED } from './config.js';
 
 
 // const EXAMPLES = [
