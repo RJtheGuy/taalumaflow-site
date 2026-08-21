@@ -1,13 +1,7 @@
-/**
- * chat.js — Friendly conversational chatbot
- * Routes: backend /api/public/chat/ → semantic engine → keyword KB
- * Qualifying questions only after 4 substantive exchanges, not 2
- * Greetings handled naturally without fallback
- */
+
 import { PUBLIC_API, IS_BACKEND_CONFIGURED } from './config.js';
 import { initEngine, answer as engineAnswer, FALLBACK } from './chat-engine.js';
 
-/* ── Greetings — respond naturally, no fallback ──────────── */
 const GREETINGS = new Set([
   'hi','hello','hey','ciao','salve','buongiorno','buonasera',
   'hola','bonjour','good morning','good afternoon','good evening',
@@ -29,7 +23,6 @@ function randomGreeting() {
   return GREETING_REPLIES[Math.floor(Math.random() * GREETING_REPLIES.length)];
 }
 
-/* ── Formatting ──────────────────────────────────────────── */
 function fmt(raw) {
   return raw
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
@@ -67,7 +60,6 @@ function showTyping(container) {
   return el;
 }
 
-/* ── Backend chat ────────────────────────────────────────── */
 async function backendChat(query, history = []) {
   const res = await fetch(PUBLIC_API.chat, {
     method: 'POST',
@@ -79,7 +71,6 @@ async function backendChat(query, history = []) {
   return d.answer || null;
 }
 
-/* ── Qualifying flow — only after 4 real exchanges ───────── */
 const QUALIFY_Q = [
   "To give you the most relevant answer — how many orders do you process per week, roughly?",
   "What channel do your clients use to send orders — WhatsApp, email, or phone?",
@@ -115,7 +106,6 @@ function renderCTA(container, answers) {
   container.scrollTop = container.scrollHeight;
 }
 
-/* ── Core handler ────────────────────────────────────────── */
 function makeHandler(msgs, typingEl, input, sendBtn) {
   let realExchanges = 0;
   let qStep = -1;
@@ -132,7 +122,6 @@ function makeHandler(msgs, typingEl, input, sendBtn) {
     sendBtn.disabled = true;
     appendMsg(msgs, 'user', text);
 
-    // ── Qualifying flow active ────────────────────────────
     if (qStep >= 0) {
       // If user asks a real question instead of answering, exit qualifying and answer
       const isRealQuestion = text.includes('?') || text.split(' ').length > 4;
@@ -157,7 +146,6 @@ function makeHandler(msgs, typingEl, input, sendBtn) {
       }
     }
 
-    // ── Handle greetings instantly ────────────────────────
     if (isGreeting(text)) {
       setTimeout(() => {
         appendMsg(msgs, 'bot', fmt(randomGreeting()));
@@ -168,7 +156,6 @@ function makeHandler(msgs, typingEl, input, sendBtn) {
 
     realExchanges++;
 
-    // ── Normal answer ─────────────────────────────────────
     const dots = typingEl
       ? (typingEl.style.display = 'flex', typingEl)
       : showTyping(msgs);
@@ -201,8 +188,7 @@ function makeHandler(msgs, typingEl, input, sendBtn) {
     history.push({ role: 'assistant', content: reply });
     if (history.length > 12) history.splice(0, 2); // keep last 6 turns
 
-    // Trigger qualifying only after 4 real (non-greeting) exchanges
-    // and only if user hasn't switched language mid-conversation
+   
     if (realExchanges === 4 && qStep < 0) {
       qStep = 0;
       setTimeout(() => {
@@ -218,7 +204,6 @@ function makeHandler(msgs, typingEl, input, sendBtn) {
   };
 }
 
-/* ── Inline chat ─────────────────────────────────────────── */
 export function initInlineChat({ inputId, sendBtnId, messagesId, typingId }) {
   const input   = document.getElementById(inputId);
   const sendBtn = document.getElementById(sendBtnId);
@@ -232,7 +217,6 @@ export function initInlineChat({ inputId, sendBtnId, messagesId, typingId }) {
   });
 }
 
-/* ── Float chat ──────────────────────────────────────────── */
 export function initFloatChat({ panelId, btnId, inputId, sendBtnId, messagesId }) {
   const panel   = document.getElementById(panelId);
   const btn     = document.getElementById(btnId);

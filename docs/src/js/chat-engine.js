@@ -1,9 +1,4 @@
-/**
- * chat-engine.js
- * Semantic similarity engine using Transformers.js.
- * Same approach as TaalumaERP's engine.py — all-MiniLM-L6-v2.
- * Falls back to keyword search while model loads.
- */
+
 import { KB } from './rag-kb.js';
 
 const MODEL_ID  = 'Xenova/all-MiniLM-L6-v2';

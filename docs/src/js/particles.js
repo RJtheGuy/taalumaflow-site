@@ -1,8 +1,4 @@
-/**
- * particles.js — Enhanced two-layer animated background
- * Layer 1: Aurora gradient blobs (slow, mouse-reactive, time-shifted)
- * Layer 2: Particle field with connection lines
- */
+
 export function initParticles(canvasId = 'bg-canvas') {
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;

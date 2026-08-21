@@ -1,15 +1,3 @@
-/**
- * ui.js
- * ─────────────────────────────────────────────────────────────
- * General UI utilities:
- *   initNavScroll    — sticky nav background on scroll
- *   initMobileNav    — drawer open/close
- *   initScrollReveal — IntersectionObserver fade-in
- *   initCounters     — animated hero number counters
- *   initChartPeriods — period button toggle on analytics chart
- *   initContactForm  — form submit with success state
- * ─────────────────────────────────────────────────────────────
- */
 
 export function initNavScroll(navId = 'nav') {
   const nav = document.getElementById(navId);

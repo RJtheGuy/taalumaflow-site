@@ -1,14 +1,4 @@
-/**
- * rag-kb.js — TaalumaFlow knowledge base
- *
- * Each entry has:
- *   questions  — used by the semantic engine (all-MiniLM-L6-v2)
- *   keywords   — used by the fast keyword fallback
- *   answer     — what the bot says
- *
- * Tone: professional data science company, direct and honest,
- * never sounds like a generic chatbot or a sales script.
- */
+
 export const KB = [
   {
     questions: [
