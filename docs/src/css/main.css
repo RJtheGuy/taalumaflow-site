@@ -731,7 +731,7 @@ footer { border-top: 1px solid var(--border); padding: 36px 48px; display: flex;
   background: none;
   border: 1px solid var(--border);
   border-radius: 6px;
-  color: var(--text3);
+  color: #fff;
   font-size: 14px;
   width: 28px; height: 28px;
   display: flex; align-items: center; justify-content: center;
@@ -739,11 +739,11 @@ footer { border-top: 1px solid var(--border); padding: 36px 48px; display: flex;
   transition: all .2s;
   flex-shrink: 0;
 }
-.cfp-clear-btn:hover {
+/*.cfp-clear-btn:hover {
   background: var(--surface2);
   color: var(--text);
   border-color: var(--border2);
-}
+}*/
 
 /* ── CSV Dashboard enhancements ───────────────────────────── */
 .csv-chart-full { grid-column: 1 / -1; }
@@ -862,7 +862,7 @@ button, a, .btn-primary, .btn-secondary,
   background: none;
   border: 1px solid var(--border);
   border-radius: 6px;
-  color: var(--text3);
+  color: #fff;
   font-size: 13px;
   width: 28px; height: 28px;
   display: flex; align-items: center; justify-content: center;
@@ -870,8 +870,8 @@ button, a, .btn-primary, .btn-secondary,
   transition: all .2s;
   flex-shrink: 0;
 }
-.cfp-close-btn:hover {
+/*.cfp-close-btn:hover {
   background: var(--surface2);
   color: var(--text);
   border-color: var(--border2);
-}
+}*/
