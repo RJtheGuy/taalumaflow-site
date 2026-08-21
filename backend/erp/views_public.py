@@ -1,17 +1,4 @@
 
-
-"""
-backend/erp/views_public.py
-────────────────────────────────────────────────────────────────
-Public API endpoints for talumaflow.com demos.
-No auth. Rate-limited. CORS open to talumaflow.com + localhost.
-
-Endpoints:
-  POST /api/public/extract/
-  POST /api/public/chat/
-  GET  /api/public/health/
-────────────────────────────────────────────────────────────────
-"""
 import json
 import time
 import logging
@@ -24,10 +11,6 @@ from django.views.decorators.cache import never_cache
 
 logger = logging.getLogger(__name__)
 
-# ── Optional shared secret for public endpoints ───────────────
-# Set PUBLIC_API_TOKEN in .env to require this header on all requests:
-# X-Public-Token: <your-token>
-# Leave empty to disable (token check skipped).
 _PUBLIC_TOKEN = os.getenv('PUBLIC_API_TOKEN', '').strip()
 
 def _check_token(request) -> bool:
@@ -35,9 +18,6 @@ def _check_token(request) -> bool:
         return True  # disabled
     return request.headers.get('X-Public-Token', '') == _PUBLIC_TOKEN
 
-# ── CORS ─────────────────────────────────────────────────────
-# Tunnel URL is added dynamically — any *.trycloudflare.com or
-# *.ts.net origin is allowed during development.
 _ALWAYS_ALLOWED = {
     'https://talumaflow.com',
     'https://www.talumaflow.com',
@@ -78,7 +58,6 @@ def _preflight(origin):
         res[k] = v
     return res
 
-# ── Rate limiting ─────────────────────────────────────────────
 _rl: dict = defaultdict(list)
 
 def _allow(ip: str, limit: int, window: int = 60) -> bool:
@@ -116,7 +95,6 @@ def _ip(request) -> str:
     return xff.split(',')[0].strip() if xff else request.META.get('REMOTE_ADDR', 'unknown')
 
 
-# ── /api/public/extract/ ─────────────────────────────────────
 @csrf_exempt
 @never_cache
 def public_extract(request):
@@ -190,8 +168,6 @@ def public_extract(request):
             500, origin
         )
 
-
-# ── /api/public/health/ ──────────────────────────────────────
 @csrf_exempt
 @never_cache
 def public_health(request):
@@ -207,7 +183,6 @@ def public_health(request):
         return _json({'ok': False, 'error': str(exc)}, 200, origin)
 
 
-# ── /api/public/chat/ ────────────────────────────────────────
 @csrf_exempt
 @never_cache
 def public_chat(request):
@@ -255,7 +230,6 @@ def public_chat(request):
     return _json({'answer': answer}, 200, origin)
 
 
-# ── /api/public/contact/ ─────────────────────────────────────
 @csrf_exempt
 @never_cache
 def public_contact(request):
@@ -347,7 +321,6 @@ def _generate_demo_pdf(result: dict, doc_num: str, subtotal: float, vat: float, 
         items = result.get('items', [])
         story = []
 
-        # ── Header ────────────────────────────────────────────
         header_data = [
             [Paragraph('<font color="#2563EB"><b>Taluma</b></font><font color="#9B5DE5">Flow</font>', styles['Normal']),
              Paragraph(f'<b>{doc_num}</b><br/><font color="#888888" size="9">{__import__("datetime").date.today().strftime("%d/%m/%Y")}</font><br/><font color="#2563EB" size="9">PREVENTIVO / FATTURA</font>', styles['Normal'])],
@@ -362,7 +335,6 @@ def _generate_demo_pdf(result: dict, doc_num: str, subtotal: float, vat: float, 
         story.append(header_table)
         story.append(Spacer(1, 6*mm))
 
-        # ── Customer ──────────────────────────────────────────
         story.append(Paragraph('CUSTOMER', label_style))
         story.append(Paragraph(f'<b>{result.get("client_name") or "Unknown"}</b>', body_style))
         if result.get('client_address'):
@@ -371,7 +343,6 @@ def _generate_demo_pdf(result: dict, doc_num: str, subtotal: float, vat: float, 
             story.append(Paragraph(result['client_email'], sub_style))
         story.append(Spacer(1, 6*mm))
 
-        # ── Items table ───────────────────────────────────────
         story.append(Paragraph('ORDER ITEMS', label_style))
         table_data = [['Description', 'Qty', 'Unit Price', 'Total']]
         for i in items:
@@ -399,7 +370,6 @@ def _generate_demo_pdf(result: dict, doc_num: str, subtotal: float, vat: float, 
         story.append(item_table)
         story.append(Spacer(1, 4*mm))
 
-        # ── Totals ────────────────────────────────────────────
         totals_data = [
             ['', '', 'Subtotal', f'€ {subtotal:.2f}'],
             ['', '', 'VAT 22%',  f'€ {vat:.2f}'],
@@ -419,7 +389,6 @@ def _generate_demo_pdf(result: dict, doc_num: str, subtotal: float, vat: float, 
         story.append(totals_table)
         story.append(Spacer(1, 8*mm))
 
-        # ── Confidence badge ──────────────────────────────────
         conf = int((result.get('confidence', 1) or 1) * 100)
         story.append(Paragraph(
             f'<font color="#065f46">✓ AI Confidence: {conf}% — Auto-approved</font>',
@@ -427,7 +396,6 @@ def _generate_demo_pdf(result: dict, doc_num: str, subtotal: float, vat: float, 
         ))
         story.append(Spacer(1, 12*mm))
 
-        # ── Footer ────────────────────────────────────────────
         footer_data = [['Generated by TaalumaFlow · talumaflow.com', 'Payment due within 30 days']]
         footer_table = Table(footer_data, colWidths=['60%','40%'])
         footer_table.setStyle(TableStyle([
@@ -447,7 +415,6 @@ def _generate_demo_pdf(result: dict, doc_num: str, subtotal: float, vat: float, 
         return None
 
 
-# ── /api/public/send-result/ ─────────────────────────────────
 @csrf_exempt
 @never_cache
 def public_send_result(request):
