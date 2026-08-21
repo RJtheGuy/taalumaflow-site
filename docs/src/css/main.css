@@ -1,10 +1,3 @@
-/* ═══════════════════════════════════════════════════════════
-   main.css — TaalumaFlow website styles
-   All colours are CSS custom properties so dark/light toggle
-   is a single attribute swap on <html>.
-═══════════════════════════════════════════════════════════ */
-
-/* ── Theme tokens ─────────────────────────────────────────── */
 :root {
   --tr: 0.35s cubic-bezier(.4,0,.2,1);
 }
@@ -47,7 +40,6 @@
   --shadow:   rgba(0,0,0,0.1);
 }
 
-/* ── Reset ────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; }
 body {
@@ -59,14 +51,12 @@ body {
   transition: background var(--tr), color var(--tr);
 }
 
-/* ── Utility ──────────────────────────────────────────────── */
 .sr-only {
   position: absolute; width: 1px; height: 1px;
   padding: 0; margin: -1px; overflow: hidden;
   clip: rect(0,0,0,0); border: 0;
 }
 
-/* ── Canvas ───────────────────────────────────────────────── */
 #bg-canvas {
   position: fixed; top: 0; left: 0;
   width: 100%; height: 100%;
@@ -75,7 +65,6 @@ body {
 }
 [data-theme="light"] #bg-canvas { opacity: 0.2; }
 
-/* ── Nav ──────────────────────────────────────────────────── */
 #nav {
   position: fixed; top: 0; left: 0; right: 0; z-index: 100;
   padding: 18px 48px;
@@ -142,7 +131,6 @@ body {
   cursor: pointer; color: var(--text); font-size: 22px; padding: 4px;
 }
 
-/* ── Mobile nav ───────────────────────────────────────────── */
 .mobile-nav-overlay {
   display: none; position: fixed; inset: 0;
   background: rgba(0,0,0,0.5); z-index: 199;
@@ -164,7 +152,6 @@ body {
 }
 .mobile-nav-drawer a:hover { color: var(--text); }
 
-/* ── Hero ─────────────────────────────────────────────────── */
 #hero {
   position: relative; z-index: 1; min-height: 100vh;
   display: flex; flex-direction: column;
@@ -240,7 +227,6 @@ body {
 .hm-sub { font-size: 16px; color: var(--text2); }
 .hm-lbl { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.1em; }
 
-/* ── Section base ─────────────────────────────────────────── */
 section { position: relative; z-index: 1; }
 .si { max-width: 1160px; margin: 0 auto; padding: 96px 40px; }
 .sl { font-size: 10px; font-weight: 700; color: var(--blue); letter-spacing: 0.16em; text-transform: uppercase; margin-bottom: 14px; }
@@ -252,7 +238,6 @@ section { position: relative; z-index: 1; }
 }
 .ss { font-size: 16px; color: var(--text2); max-width: 540px; line-height: 1.75; font-weight: 300; transition: color var(--tr); }
 
-/* ── Products ─────────────────────────────────────────────── */
 #products { background: var(--bg); transition: background var(--tr); }
 .products-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 56px; flex-wrap: wrap; gap: 20px; }
 .products-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
@@ -284,7 +269,6 @@ section { position: relative; z-index: 1; }
 .pc-link { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--blue); text-decoration: none; letter-spacing: 0.03em; transition: gap 0.2s; }
 .pc-link:hover { gap: 10px; }
 
-/* Demo panel inside featured card */
 .pc-demo-panel { background: var(--bg2); border: 1px solid var(--border); border-radius: 14px; padding: 20px; font-family: 'Space Grotesk', monospace; font-size: 11px; line-height: 2; transition: background var(--tr), border var(--tr); }
 .dp-row { display: flex; justify-content: space-between; align-items: center; }
 .dp-k { color: var(--text3); font-size: 10px; }
@@ -293,7 +277,6 @@ section { position: relative; z-index: 1; }
 .dp-b { padding: 1px 8px; background: rgba(79,142,247,0.15); border-radius: 4px; color: var(--blue); font-size: 9px; font-weight: 700; }
 .dp-hr { height: 1px; background: var(--border); margin: 8px 0; }
 
-/* ── Chat demo section ────────────────────────────────────── */
 #chatdemo { background: var(--bg2); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); transition: background var(--tr), border var(--tr); }
 .chatdemo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
 .chatdemo-feature { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 18px; }
@@ -301,7 +284,6 @@ section { position: relative; z-index: 1; }
 .cdf-title { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 2px; transition: color var(--tr); }
 .cdf-desc { font-size: 12px; color: var(--text2); line-height: 1.6; transition: color var(--tr); }
 
-/* Chat widget */
 .chat-widget { border: 1px solid var(--border2); border-radius: 20px; background: var(--surface); overflow: hidden; box-shadow: 0 24px 80px var(--shadow); transition: background var(--tr), border var(--tr); }
 .chat-header { background: linear-gradient(135deg, var(--blue2), var(--purple)); padding: 16px 20px; display: flex; align-items: center; gap: 12px; }
 .chat-avatar { width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 16px; }
@@ -335,7 +317,6 @@ section { position: relative; z-index: 1; }
 .chat-send:disabled { opacity: 0.4; cursor: not-allowed; }
 .chat-disclaimer { text-align: center; font-size: 10px; color: var(--text3); padding: 0 16px 12px; transition: color var(--tr); }
 
-/* ── Analytics ────────────────────────────────────────────── */
 #analytics { background: var(--bg); transition: background var(--tr); }
 .analytics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 56px; }
 .kpi-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 24px; transition: all var(--tr); }
@@ -368,7 +349,6 @@ section { position: relative; z-index: 1; }
 .sr-bar { height: 8px; border-radius: 99px; }
 .sr-pct { font-size: 12px; font-weight: 600; color: var(--text2); min-width: 36px; text-align: right; transition: color var(--tr); }
 
-/* ── Process ──────────────────────────────────────────────── */
 #process { background: var(--bg2); transition: background var(--tr); }
 .process-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0; margin-top: 60px; position: relative; }
 .process-grid::before { content: ''; position: absolute; top: 28px; left: 10%; right: 10%; height: 1px; background: linear-gradient(90deg, transparent, var(--border2), var(--border2), transparent); }
@@ -378,7 +358,6 @@ section { position: relative; z-index: 1; }
 .pg-title { font-family: 'Space Grotesk', sans-serif; font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 7px; transition: color var(--tr); }
 .pg-desc { font-size: 11px; color: var(--text2); line-height: 1.6; transition: color var(--tr); }
 
-/* ── Stats band ───────────────────────────────────────────── */
 #stats { background: linear-gradient(135deg, rgba(37,99,235,0.08), rgba(155,93,229,0.05)); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); transition: border var(--tr); }
 .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); max-width: 1160px; margin: 0 auto; }
 .stat-item { padding: 56px 32px; text-align: center; border-right: 1px solid var(--border); transition: border var(--tr); }
@@ -387,7 +366,6 @@ section { position: relative; z-index: 1; }
 .stat-num span { color: var(--blue); }
 .stat-lbl { font-size: 12px; color: var(--text2); line-height: 1.5; transition: color var(--tr); }
 
-/* ── Contact ──────────────────────────────────────────────── */
 #contact { background: var(--bg); transition: background var(--tr); }
 .contact-grid { display: grid; grid-template-columns: 5fr 7fr; gap: 56px; align-items: start; }
 .contact-detail { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 18px; }
@@ -410,7 +388,6 @@ section { position: relative; z-index: 1; }
 .form-btn { width: 100%; padding: 14px; border-radius: 10px; background: linear-gradient(135deg, var(--blue2), var(--blue)); border: none; color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; letter-spacing: 0.03em; box-shadow: 0 0 30px rgba(79,142,247,0.2); transition: transform 0.2s, box-shadow 0.2s; }
 .form-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 40px rgba(79,142,247,0.35); }
 
-/* ── Footer ───────────────────────────────────────────────── */
 footer { border-top: 1px solid var(--border); padding: 36px 48px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; position: relative; z-index: 1; transition: border var(--tr), background var(--tr); }
 .f-logo { font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 700; color: var(--text); letter-spacing: -0.02em; transition: color var(--tr); }
 .f-logo span { color: var(--blue); }
@@ -419,7 +396,6 @@ footer { border-top: 1px solid var(--border); padding: 36px 48px; display: flex;
 .f-links a:hover { color: var(--text); }
 .f-copy { font-size: 11px; color: var(--text3); transition: color var(--tr); }
 
-/* ── Floating chat bubble ─────────────────────────────────── */
 .chat-bubble-btn {
   position: fixed; bottom: 28px; right: 28px; z-index: 500;
   width: 58px; height: 58px; border-radius: 50%;
@@ -462,7 +438,6 @@ footer { border-top: 1px solid var(--border); padding: 36px 48px; display: flex;
 .cfp-send:hover { opacity: 0.85; }
 .cfp-send:disabled { opacity: 0.4; cursor: not-allowed; }
 
-/* ── Scroll reveal ────────────────────────────────────────── */
 .rv { opacity: 0; transform: translateY(24px); transition: opacity 0.7s cubic-bezier(.4,0,.2,1), transform 0.7s cubic-bezier(.4,0,.2,1); }
 .rv.vis { opacity: 1; transform: translateY(0); }
 .d1 { transition-delay: 0.08s; }
@@ -470,7 +445,6 @@ footer { border-top: 1px solid var(--border); padding: 36px 48px; display: flex;
 .d3 { transition-delay: 0.24s; }
 .d4 { transition-delay: 0.32s; }
 
-/* ── Responsive ───────────────────────────────────────────── */
 @media (max-width: 1000px) {
   .products-grid { grid-template-columns: 1fr 1fr; }
   .pc.featured { grid-column: span 2; }
@@ -503,7 +477,6 @@ footer { border-top: 1px solid var(--border); padding: 36px 48px; display: flex;
   .chat-float-panel { width: calc(100vw - 32px); right: 16px; }
 }
 
-/* ── Typing indicator dot (used in chat.js showTyping) ─── */
 .td {
   display: inline-block;
   width: 7px; height: 7px; border-radius: 50%;
@@ -511,7 +484,6 @@ footer { border-top: 1px solid var(--border); padding: 36px 48px; display: flex;
   animation: typeDot 1.2s infinite;
 }
 
-/* ── Chat formatted lines ─────────────────────────────────── */
 .cb-line {
   display: block;
   padding-left: 4px;
@@ -536,14 +508,10 @@ footer { border-top: 1px solid var(--border); padding: 36px 48px; display: flex;
   flex-shrink: 0;
 }
  
-/* Ensures gradient background on pc-icon doesn't fight with
-   the default surface2 background when style attr is present */
 .pc-icon[style] {
   background: unset; /* let inline style win */
 }
-/* ══════════════════════════════════════════════════════════════
-   EXTRACTION DEMO
-══════════════════════════════════════════════════════════════ */
+
 #extraction-demo { background:var(--bg2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);transition:background var(--tr),border var(--tr); }
 .demo-grid { display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-top:36px;align-items:start; }
 .demo-input-panel { display:flex;flex-direction:column;gap:12px; }
@@ -591,9 +559,7 @@ footer { border-top: 1px solid var(--border); padding: 36px 48px; display: flex;
 .demo-tot-grand .demo-tot-lbl+div { font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;color:var(--text); }
 .demo-invoice-box { background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:8px;padding:9px 14px;font-size:11px;color:var(--green);display:flex;align-items:center;gap:8px;font-weight:500; }
 
-/* ══════════════════════════════════════════════════════════════
-   CSV DASHBOARD
-══════════════════════════════════════════════════════════════ */
+
 #csv-section { background:var(--bg);transition:background var(--tr); }
 .csv-upload-area { margin-top:36px; }
 .csv-dropzone { position:relative;border:2px dashed var(--border2);border-radius:16px;padding:48px 32px;text-align:center;background:var(--surface);cursor:pointer;transition:all .2s; }
@@ -620,13 +586,11 @@ footer { border-top: 1px solid var(--border); padding: 36px 48px; display: flex;
 .csv-bar-val { width:56px;text-align:right;color:var(--text2);font-size:11px;flex-shrink:0; }
 .csv-privacy-note { text-align:center;font-size:12px;color:var(--text3);padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:10px; }
 
-/* ── Chat extras ──────────────────────────────────────────── */
 .cb-line { display:block;padding-left:4px;margin:1px 0; }
 .msg-typing { display:flex!important;align-items:center;gap:5px;padding:12px 16px!important; }
 .td { display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--text3);animation:typeDot 1.2s infinite; }
 .qualifying-cta { background:linear-gradient(135deg,rgba(37,99,235,.08),rgba(155,93,229,.06));border:1px solid var(--border2)!important;border-radius:14px;padding:16px!important; }
 
-/* ── Responsive ───────────────────────────────────────────── */
 @media(max-width:800px){
   .demo-grid { grid-template-columns:1fr; }
   .csv-dash-header { grid-template-columns:1fr 1fr; }
@@ -638,7 +602,6 @@ footer { border-top: 1px solid var(--border); padding: 36px 48px; display: flex;
   .demo-run-btn,.demo-cycle-btn { width:100%;justify-content:center; }
 }
 
-/* ── Demo send row ────────────────────────────────────────── */
 .demo-send-row {
   display:flex;align-items:center;gap:8px;
   padding:12px;background:var(--bg3);
@@ -670,7 +633,6 @@ footer { border-top: 1px solid var(--border); padding: 36px 48px; display: flex;
 }
 .demo-pdf-btn:hover { opacity:.88;color:#fff; }
 
-/* ── Email capture modal ──────────────────────────────────── */
 #email-capture-modal {
   position:fixed;inset:0;z-index:1000;
   display:flex;align-items:center;justify-content:center;
@@ -725,7 +687,6 @@ footer { border-top: 1px solid var(--border); padding: 36px 48px; display: flex;
   text-align:center;margin-top:12px;
 }
 
-/* ── Chat clear button ────────────────────────────────────────── */
 .cfp-clear-btn {
   margin-left: auto;
   background: none;
@@ -745,7 +706,6 @@ footer { border-top: 1px solid var(--border); padding: 36px 48px; display: flex;
   border-color: var(--border2);
 }*/
 
-/* ── CSV Dashboard enhancements ───────────────────────────── */
 .csv-chart-full { grid-column: 1 / -1; }
 
 .csv-top-table {
@@ -774,8 +734,6 @@ footer { border-top: 1px solid var(--border); padding: 36px 48px; display: flex;
 }
 .csv-share-bar span { font-size: 11px; color: var(--text3); white-space: nowrap; }
 
-/* ── Mobile fixes ─────────────────────────────────────────── */
-/* Prevent pull-to-refresh and accidental page zoom on mobile */
 html {
   overscroll-behavior-y: contain;
   -webkit-text-size-adjust: 100%;
@@ -831,7 +789,6 @@ button, a, .btn-primary, .btn-secondary,
     padding: 16px !important;
   }
 
-  /* Send row stacks on mobile */
   .demo-send-row {
     flex-direction: column;
   }
@@ -841,7 +798,6 @@ button, a, .btn-primary, .btn-secondary,
     font-size: 16px; /* prevent iOS zoom */
   }
 
-  /* Email capture modal full width */
   .ecm-box {
     margin: 0 !important;
     border-radius: 20px 20px 0 0 !important;
@@ -857,7 +813,6 @@ button, a, .btn-primary, .btn-secondary,
   }
 }
 
-/* ── Chat close button ────────────────────────────────────── */
 .cfp-close-btn {
   background: none;
   border: 1px solid var(--border);
