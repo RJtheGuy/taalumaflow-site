@@ -240,6 +240,7 @@ export function initFloatChat({ panelId, btnId, inputId, sendBtnId, messagesId }
   const sendBtn = document.getElementById(sendBtnId);
   const msgs    = document.getElementById(messagesId);
   const clearBtn = document.getElementById('cfp-clear-btn');
+  const closeBtn = document.getElementById('cfp-close-btn');
   if (!panel || !btn || !input || !msgs) return;
 
   const GREETING_MSG = `Ciao! I'm TaalumaFlow's demo assistant. Ask me anything about our products, or try asking in Italian. 🇮🇹`;
@@ -260,6 +261,12 @@ export function initFloatChat({ panelId, btnId, inputId, sendBtnId, messagesId }
   });
 
   clearBtn?.addEventListener('click', resetChat);
+
+  closeBtn?.addEventListener('click', () => {
+    panel.classList.remove('open');
+    btn.classList.remove('open');
+    btn.setAttribute('aria-expanded', 'false');
+  });
 
   let handler = makeHandler(msgs, null, input, sendBtn);
   sendBtn.addEventListener('click', handler);
