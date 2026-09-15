@@ -1,4 +1,5 @@
 import { PUBLIC_API, IS_BACKEND_CONFIGURED } from './config.js';
+import { exportDashboardPDF } from './dashboard_pdf.js';
 
 const EXAMPLES = [
   {
@@ -622,7 +623,7 @@ function renderDashboard(rows, dashEl, dropzone) {
       This is exactly how we build your production dashboards.
     </div>
     <div style="text-align:center;margin-top:20px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
-      <button onclick="window.print()" class="btn-secondary" style="font-size:13px;padding:10px 20px">
+      <button id="csv-export-pdf-btn" class="btn-secondary" style="font-size:13px;padding:10px 20px">
         ⬇ Export as PDF
       </button>
       <a href="#contact" class="btn-primary" style="font-size:13px;padding:10px 24px">
@@ -632,6 +633,9 @@ function renderDashboard(rows, dashEl, dropzone) {
 
   dashEl.style.display = 'block';
   requestAnimationFrame(() => drawLine('csv-line'));
+  document.getElementById('csv-export-pdf-btn')?.addEventListener('click', () => {
+  exportDashboardPDF({ grand, count, topCats, dates, dateVals, topProducts, growthPct });
+});
 }
 
 function drawLine(id) {
