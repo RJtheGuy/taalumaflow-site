@@ -777,6 +777,18 @@ export function generatePDF(data) {
   generateAndDownloadPDF(data);
 }
 
+// function generateAndDownloadPDF(data) {
+//   const html = buildPDFHtml(data);
+//   const w = window.open('', '_blank');
+//   if (!w) return;
+//   w.document.write(html);
+//   w.document.close();
+//   w.focus();
+//   setTimeout(() => { w.print(); }, 500);
+  
+// }
+
+
 function generateAndDownloadPDF(data) {
   const html = buildPDFHtml(data);
   const w = window.open('', '_blank');
@@ -784,9 +796,14 @@ function generateAndDownloadPDF(data) {
   w.document.write(html);
   w.document.close();
   w.focus();
-  setTimeout(() => { w.print(); }, 500);
-}
 
+  w.onafterprint = () => w.close();
+
+  setTimeout(() => {
+    w.print();
+    setTimeout(() => { if (!w.closed) w.close(); }, 1000); 
+  }, 500);
+}
 // Returns base64-encoded HTML for email attachment
 function generatePDFBase64(data) {
   const html = buildPDFHtml(data);

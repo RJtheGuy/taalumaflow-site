@@ -121,13 +121,26 @@ ${topProducts.length > 0 ? `
 </body>
 </html>`;
 
-  const w = window.open('', '_blank', 'width=900,height=700');
+//   const w = window.open('', '_blank', 'width=900,height=700');
+//   if (!w) return;
+//   w.document.write(html);
+//   w.document.close();
+//   w.focus();
+//   setTimeout(() => {
+//     w.print();
+//     // w.close(); // uncomment to auto-close after print dialog
+//   }, 600);
+// }
+
+const w = window.open('', '_blank', 'width=900,height=700');
   if (!w) return;
   w.document.write(html);
   w.document.close();
   w.focus();
+
+  w.onafterprint = () => w.close();
+
   setTimeout(() => {
     w.print();
-    // w.close(); // uncomment to auto-close after print dialog
+    setTimeout(() => { if (!w.closed) w.close(); }, 1000); 
   }, 600);
-}
