@@ -29,7 +29,48 @@ const TOOLS = {
     columns: 'Needs: product, qty columns. Optional: unit_price',
   },
 };
+const SAMPLE_CSV = {
+  forecast: `product,qty,date
+Olio EVO Frantoio,12,2026-01-05
+Vino Rosso Toscano,8,2026-01-05
+Olio EVO Frantoio,18,2026-02-03
+Vino Rosso Toscano,15,2026-02-03
+Olio EVO Frantoio,22,2026-03-01
+Vino Rosso Toscano,20,2026-03-01`,
+  churn: `customer,date,revenue
+Marco Bianchi,2026-01-15,144
+Ristorante La Pergola,2026-01-20,280
+Marco Bianchi,2026-02-10,216
+Distribuzione Nord,2026-03-05,510`,
+  inventory: `product,qty,unit_price
+Olio EVO Frantoio,120,12.00
+Vino Rosso Toscano,80,18.00
+Pasta Di Martino,300,1.80`,
+};
 
+function downloadSample(toolKey) {
+  const blob = new Blob([SAMPLE_CSV[toolKey]], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `taalumaflow-sample-${toolKey}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// Turns a raw backend error into a friendly message + optional technical detail
+function parseError(rawMessage, tool) {
+  const m = rawMessage || '';
+  const columnIssue = /need .* columns?/i.test(m);
+
+  if (columnIssue) {
+    return {
+      friendly: `This file doesn't have the columns ${tool.label} needs. ${tool.columns}.`,
+      technical: m,
+    };
+  }
+  return { friendly: `Something went wrong reading this file. Try the sample CSV below to see the expected format.`, technical: m };
+}
 export function initAnalyticsWidget() {
   const container = document.getElementById('analytics-widget');
   if (!container) return;
@@ -152,11 +193,37 @@ async function handleFile(file, toolKey, container) {
     renderResults(toolKey, data, resultsEl);
 
   } catch (err) {
-    status.style.color = 'var(--red, #ef4444)';
-    status.textContent = err.message === 'no_backend'
-      ? '⚡ Backend not connected — book a demo to run this on your data.'
-      : `Error: ${err.message}`;
-  }
+    status.textContent = '';
+
+    if (err.message === 'no_backend') {
+      status.style.color = 'var(--red, #ef4444)';
+      status.textContent = '⚡ Backend not connected — book a demo to run this on your data.';
+      return;
+    }
+
+    const { friendly, technical } = parseError(err.message, tool);
+    renderError(friendly, technical, toolKey, resultsEl);
+}
+
+function renderError(friendly, technical, toolKey, el) {
+  el.innerHTML = `
+    <div class="aw-error">
+      <div class="aw-error-title">⚠️ ${friendly}</div>
+      <div class="aw-error-actions">
+        <button class="aw-sample-btn" id="aw-sample-dl">↓ Download sample CSV</button>
+        <button class="aw-details-toggle" id="aw-details-toggle">Show technical details</button>
+      </div>
+      <div class="aw-error-details" id="aw-error-details" style="display:none">${technical}</div>
+    </div>`;
+
+  document.getElementById('aw-sample-dl')?.addEventListener('click', () => downloadSample(toolKey));
+  document.getElementById('aw-details-toggle')?.addEventListener('click', (e) => {
+    const details = document.getElementById('aw-error-details');
+    const isHidden = details.style.display === 'none';
+    details.style.display = isHidden ? 'block' : 'none';
+    e.target.textContent = isHidden ? 'Hide technical details' : 'Show technical details';
+  });
+}
 }
 
 function renderResults(toolKey, data, el) {

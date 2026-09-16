@@ -1001,3 +1001,30 @@ button, a, .btn-primary, .btn-secondary,
   font-size: 12px; color: var(--text3);
   margin-bottom: 14px; line-height: 1.5;
 }
+
+.aw-error {
+  margin-top: 20px; padding: 20px;
+  background: rgba(239,68,68,.06);
+  border: 1px solid rgba(239,68,68,.2);
+  border-radius: 12px;
+}
+.aw-error-title { font-size: 13px; color: var(--text); font-weight: 600; margin-bottom: 14px; line-height: 1.5; }
+.aw-error-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.aw-sample-btn, .aw-details-toggle {
+  padding: 7px 14px; border-radius: 8px; font-size: 12px; font-weight: 500;
+  cursor: pointer; transition: all .2s;
+}
+.aw-sample-btn {
+  background: var(--blue); border: none; color: #fff;
+}
+.aw-sample-btn:hover { opacity: .88; }
+.aw-details-toggle {
+  background: none; border: 1px solid var(--border); color: var(--text3);
+}
+.aw-details-toggle:hover { border-color: var(--border2); color: var(--text2); }
+.aw-error-details {
+  margin-top: 12px; padding: 10px 12px;
+  background: var(--bg3); border-radius: 8px;
+  font-family: monospace; font-size: 11px; color: var(--text3);
+  word-break: break-word;
+}
