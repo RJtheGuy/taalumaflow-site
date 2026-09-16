@@ -5,6 +5,7 @@ import { initInlineChat, initFloatChat }                   from './chat.js';
 import { initNavScroll, initMobileNav, initScrollReveal,
          initCounters, initChartPeriods, initContactForm } from './ui.js';
 import { initExtractionDemo, initCSVDashboard }            from './demo.js';
+import { initAnalyticsWidget } from './analytics.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   initTheme();
@@ -28,7 +29,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   initExtractionDemo();
   initCSVDashboard();
-
+  initAnalyticsWidget();
+  
   initInlineChat({
     inputId:    'chat-input',
     sendBtnId:  'chat-send-btn',
