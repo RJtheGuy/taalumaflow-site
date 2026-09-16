@@ -236,7 +236,6 @@ function renderResults(toolKey, data, el) {
   if (toolKey === 'inventory') renderInventory(toolKey, tool, data, el);
 }
 
-// ── Forecast renderer ─────────────────────────────────────────
 function renderForecast(toolKey, tool, data, el) {
   const maxTotal = Math.max(...data.results.map(r => r.total_forecast), 1);
   const trendIcon = t => t === 'growing' ? '📈' : t === 'declining' ? '📉' : '➡';
@@ -299,7 +298,6 @@ function renderForecast(toolKey, tool, data, el) {
   document.getElementById('aw-pdf-btn')?.addEventListener('click', () => exportAnalyticsPDF(toolKey, tool, data));
 }
 
-// ── Churn renderer ────────────────────────────────────────────
 function renderChurn(toolKey, tool, data, el) {
   const statusColor = s => s==='churned' ? '#ef4444' : s==='at_risk' ? '#f59e0b' : 'var(--green)';
   const statusLabel = s => s==='churned' ? '🔴 Churned' : s==='at_risk' ? '🟡 At risk' : '🟢 Active';
@@ -342,7 +340,6 @@ function renderChurn(toolKey, tool, data, el) {
   document.getElementById('aw-pdf-btn')?.addEventListener('click', () => exportAnalyticsPDF(toolKey, tool, data));
 }
 
-// ── Inventory renderer ────────────────────────────────────────
 function renderInventory(toolKey, tool, data, el) {
   const riskColor = r => r==='high' ? '#ef4444' : r==='medium' ? '#f59e0b' : 'var(--green)';
   const riskLabel = r => r==='high' ? '🔴 High' : r==='medium' ? '🟡 Medium' : '🟢 Low';
@@ -409,7 +406,6 @@ function ctaBlock() {
     </div>`;
 }
 
-// ── PDF export ───────────────────────────────────────────────
 function buildAnalyticsPDFHtml(toolKey, tool, data) {
   const docNum = `RPT-${Date.now().toString(36).toUpperCase().slice(-6)}`;
   const date = new Date().toLocaleString('en-GB');
