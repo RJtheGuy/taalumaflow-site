@@ -461,12 +461,13 @@ function renderError(err, resultEl, emptyEl) {
       <div style="font-size:13px;color:var(--text2);text-align:center;line-height:1.6">${msg}</div>`;
   }
 }
+const MAX_DEMO_ROWS = 100;
+const MAX_DEMO_MONTHS = 3;
 
 export function initCSVDashboard() {
   const dropzone  = document.getElementById('csv-dropzone');
   const fileInput = document.getElementById('csv-file-input');
   const dashEl    = document.getElementById('csv-dashboard');
-  const emptyEl   = document.getElementById('csv-empty');
   if (!dropzone || !fileInput) return;
 
   dropzone.addEventListener('dragover',  e => { e.preventDefault(); dropzone.classList.add('drag-over'); });
@@ -488,19 +489,19 @@ export function initCSVDashboard() {
 }
 
 const SAMPLE_ROWS = [
-  {date:'2026-01',product:'Olio EVO Frantoio',category:'Olive Oil',qty:12,revenue:144},
-  {date:'2026-01',product:'Pasta Di Martino',category:'Pasta',qty:30,revenue:54},
-  {date:'2026-01',product:'Vino Rosso Toscano',category:'Wine',qty:8,revenue:144},
-  {date:'2026-01',product:'Aceto Balsamico',category:'Vinegar',qty:5,revenue:42.5},
-  {date:'2026-02',product:'Olio EVO Frantoio',category:'Olive Oil',qty:18,revenue:216},
-  {date:'2026-02',product:'Pasta Di Martino',category:'Pasta',qty:42,revenue:75.6},
-  {date:'2026-02',product:'Vino Rosso Toscano',category:'Wine',qty:15,revenue:270},
-  {date:'2026-02',product:'Brunello 2019',category:'Wine',qty:5,revenue:225},
-  {date:'2026-03',product:'Pasta Fusilli',category:'Pasta',qty:50,revenue:80},
-  {date:'2026-03',product:'Olio EVO Frantoio',category:'Olive Oil',qty:22,revenue:264},
-  {date:'2026-03',product:'Vino Bianco Soave',category:'Wine',qty:18,revenue:162},
-  {date:'2026-03',product:'Aceto Balsamico',category:'Vinegar',qty:12,revenue:102},
-  {date:'2026-03',product:'Vino Rosso Toscano',category:'Wine',qty:20,revenue:360},
+  {date:'2026-01',product:'Olio EVO Frantoio',category:'Olive Oil',customer:'Distribuzione Nord',qty:12,revenue:144},
+  {date:'2026-01',product:'Pasta Di Martino',category:'Pasta',customer:'Ristorante La Pergola',qty:30,revenue:54},
+  {date:'2026-01',product:'Vino Rosso Toscano',category:'Wine',customer:'Distribuzione Nord',qty:8,revenue:144},
+  {date:'2026-01',product:'Aceto Balsamico',category:'Vinegar',customer:'Bar Centrale',qty:5,revenue:42.5},
+  {date:'2026-02',product:'Olio EVO Frantoio',category:'Olive Oil',customer:'Distribuzione Nord',qty:18,revenue:216},
+  {date:'2026-02',product:'Pasta Di Martino',category:'Pasta',customer:'Ristorante La Pergola',qty:42,revenue:75.6},
+  {date:'2026-02',product:'Vino Rosso Toscano',category:'Wine',customer:'Distribuzione Nord',qty:15,revenue:270},
+  {date:'2026-02',product:'Brunello 2019',category:'Wine',customer:'Enoteca Del Corso',qty:5,revenue:225},
+  {date:'2026-03',product:'Pasta Fusilli',category:'Pasta',customer:'Pizzeria Napoli',qty:50,revenue:80},
+  {date:'2026-03',product:'Olio EVO Frantoio',category:'Olive Oil',customer:'Distribuzione Nord',qty:22,revenue:264},
+  {date:'2026-03',product:'Vino Bianco Soave',category:'Wine',customer:'Ristorante La Pergola',qty:18,revenue:162},
+  {date:'2026-03',product:'Aceto Balsamico',category:'Vinegar',customer:'Bar Centrale',qty:12,revenue:102},
+  {date:'2026-03',product:'Vino Rosso Toscano',category:'Wine',customer:'Distribuzione Nord',qty:20,revenue:360},
 ];
 
 function readAndRender(file, dashEl, dropzone) {
@@ -523,27 +524,113 @@ function parseCSV(text) {
   }).filter(r => Object.values(r).some(Boolean));
 }
 
-function renderDashboard(rows, dashEl, dropzone) {
-  if (!dashEl) return;
+function detectColumns(keys) {
+  return {
+    numKey:      keys.find(k => /revenue|sales|amount|total|value/i.test(k)) ||
+                 keys.find(k => /qty|quantity/i.test(k)),
+    catKey:      keys.find(k => /category|cat|type/i.test(k)) ||
+                 keys.find(k => /product|item|name/i.test(k)),
+    dateKey:     keys.find(k => /date|month|period|time/i.test(k)),
+    prodKey:     keys.find(k => /product|item|name|prodotto/i.test(k)),
+    customerKey: keys.find(k => /customer|client|cliente/i.test(k)),
+  };
+}
+
+// ── Column mapping fallback ─────────────────────────────────
+function renderColumnMapper(rows, keys, dashEl, dropzone) {
+  dashEl.innerHTML = `
+    <div class="csv-mapper">
+      <div class="csv-mapper-title">We couldn't auto-detect your value column</div>
+      <div class="csv-mapper-sub">Tell us which columns to use and we'll build the dashboard from your file.</div>
+      <div class="csv-mapper-row">
+        <label>Value column (revenue or qty) *</label>
+        <select id="map-num">${keys.map(k=>`<option value="${k}">${k}</option>`).join('')}</select>
+      </div>
+      <div class="csv-mapper-row">
+        <label>Category column (optional)</label>
+        <select id="map-cat"><option value="">— none —</option>${keys.map(k=>`<option value="${k}">${k}</option>`).join('')}</select>
+      </div>
+      <div class="csv-mapper-row">
+        <label>Date column (optional)</label>
+        <select id="map-date"><option value="">— none —</option>${keys.map(k=>`<option value="${k}">${k}</option>`).join('')}</select>
+      </div>
+      <div class="csv-mapper-row">
+        <label>Product column (optional)</label>
+        <select id="map-prod"><option value="">— none —</option>${keys.map(k=>`<option value="${k}">${k}</option>`).join('')}</select>
+      </div>
+      <button class="csv-sample-btn" id="map-run" style="margin-top:8px">Build dashboard →</button>
+    </div>`;
+  dashEl.style.display = 'block';
+
+  document.getElementById('map-run')?.addEventListener('click', () => {
+    const manualCols = {
+      numKey:      document.getElementById('map-num').value,
+      catKey:      document.getElementById('map-cat').value || null,
+      dateKey:     document.getElementById('map-date').value || null,
+      prodKey:     document.getElementById('map-prod').value || null,
+      customerKey: null,
+    };
+    renderDashboard(rows, dashEl, dropzone, manualCols);
+  });
+}
+
+function renderLimitBanner(originalRows, originalMonths) {
+  const parts = [];
+  if (originalRows)   parts.push(`showing first ${MAX_DEMO_ROWS} of ${originalRows.toLocaleString('it-IT')} rows`);
+  if (originalMonths) parts.push(`showing last ${MAX_DEMO_MONTHS} of ${originalMonths} months`);
+  return `<div class="csv-limit-banner">📊 Demo limit: ${parts.join(' · ')}. The full dashboard shows your complete dataset with trend history.</div>`;
+}
+
+function renderDashboard(allRows, dashEl, dropzone, manualCols = null) {
+  if (!dashEl || !allRows.length) return;
   if (dropzone) dropzone.style.display = 'none';
 
-  // Detect columns
-  const keys = Object.keys(rows[0] || {});
-  const numKey = keys.find(k => /revenue|sales|amount|total|value/i.test(k)) ||
-                 keys.find(k => /qty|quantity/i.test(k));
-  const catKey = keys.find(k => /category|cat|type/i.test(k)) ||
-                 keys.find(k => /product|item|name/i.test(k));
-  const dateKey = keys.find(k => /date|month|period|time/i.test(k));
+  const keys = Object.keys(allRows[0] || {});
+  const cols = manualCols || detectColumns(keys);
 
-  const byCategory = {}, byDate = {};
+  if (!cols.numKey) {
+    renderColumnMapper(allRows, keys, dashEl, dropzone);
+    return;
+  }
+
+  const { numKey, catKey, dateKey, prodKey, customerKey } = cols;
+
+  // ── Demo limits ──────────────────────────────────────────
+  let rows = allRows;
+  let originalMonths = null;
+  if (dateKey) {
+    const allMonths = [...new Set(rows.map(r => (r[dateKey]||'').slice(0,7)).filter(Boolean))].sort();
+    if (allMonths.length > MAX_DEMO_MONTHS) {
+      originalMonths = allMonths.length;
+      const keep = new Set(allMonths.slice(-MAX_DEMO_MONTHS));
+      rows = rows.filter(r => keep.has((r[dateKey]||'').slice(0,7)));
+    }
+  }
+  let originalRowCount = null;
+  if (rows.length > MAX_DEMO_ROWS) {
+    originalRowCount = rows.length;
+    rows = rows.slice(0, MAX_DEMO_ROWS);
+  }
+
+  // ── Aggregate ────────────────────────────────────────────
+  const byCategory = {}, byDate = {}, byProduct = {}, byCustomer = {}, byProductByMonth = {};
   let grand = 0, count = 0;
 
   rows.forEach(r => {
-    const val = parseFloat(String(r[numKey] || 0).replace(/[^0-9.]/g,'')) || 0;
-    const cat = r[catKey] || 'Other';
-    const dt  = (r[dateKey] || '').slice(0, 7);
+    const val  = parseFloat(String(r[numKey] || 0).replace(/[^0-9.-]/g,'')) || 0;
+    const cat  = r[catKey] || 'Other';
+    const dt   = (r[dateKey] || '').slice(0, 7);
+    const prod = prodKey ? (r[prodKey] || 'Other') : null;
+    const cust = customerKey ? (r[customerKey] || 'Unknown') : null;
+
     byCategory[cat] = (byCategory[cat] || 0) + val;
     if (dt) byDate[dt] = (byDate[dt] || 0) + val;
+    if (prod) byProduct[prod] = (byProduct[prod] || 0) + val;
+    if (cust) byCustomer[cust] = (byCustomer[cust] || 0) + val;
+    if (prod && dt) {
+      byProductByMonth[prod] = byProductByMonth[prod] || {};
+      byProductByMonth[prod][dt] = (byProductByMonth[prod][dt] || 0) + val;
+    }
     grand += val; count++;
   });
 
@@ -551,28 +638,58 @@ function renderDashboard(rows, dashEl, dropzone) {
   const dates    = Object.keys(byDate).sort();
   const dateVals = dates.map(d => byDate[d]);
   const maxCat   = topCats[0]?.[1] || 1;
-
-  // Top products (if product column exists)
-  const prodKey = keys.find(k => /product|item|name|prodotto/i.test(k));
-  const byProduct = {};
-  if (prodKey) {
-    rows.forEach(r => {
-      const val = parseFloat(String(r[numKey] || 0).replace(/[^0-9.]/g,'')) || 0;
-      const prod = r[prodKey] || 'Other';
-      byProduct[prod] = (byProduct[prod] || 0) + val;
-    });
-  }
   const topProducts = Object.entries(byProduct).sort((a,b)=>b[1]-a[1]);
 
-  // Growth: compare last period vs previous
   let growthPct = null;
   if (dateVals.length >= 2) {
-    const last = dateVals[dateVals.length - 1];
-    const prev = dateVals[dateVals.length - 2];
-    if (prev > 0) growthPct = Math.round((last - prev) / prev * 100);
+    const last = dateVals[dateVals.length-1], prev = dateVals[dateVals.length-2];
+    if (prev > 0) growthPct = Math.round((last-prev)/prev*100);
   }
 
+  // ── Anomaly detection (category bars, >2 std dev) ───────
+  const catVals = topCats.map(([,v])=>v);
+  const catMean = catVals.reduce((a,b)=>a+b,0) / (catVals.length || 1);
+  const catStd  = Math.sqrt(catVals.reduce((s,v)=>s+(v-catMean)**2,0) / (catVals.length || 1));
+  const anomalyCats = new Set(topCats.filter(([,v]) => catStd>0 && Math.abs(v-catMean) > 2*catStd).map(([c])=>c));
+
+  // ── Forecast: simple linear regression, 2 months ahead ──
+  let forecastPoints = [];
+  if (dateVals.length >= 3) {
+    const n = dateVals.length;
+    const xs = dateVals.map((_,i)=>i);
+    const xMean = xs.reduce((a,b)=>a+b,0)/n;
+    const yMean = dateVals.reduce((a,b)=>a+b,0)/n;
+    const slope = xs.reduce((s,x,i)=>s+(x-xMean)*(dateVals[i]-yMean),0) /
+                  (xs.reduce((s,x)=>s+(x-xMean)**2,0) || 1);
+    const intercept = yMean - slope*xMean;
+    forecastPoints = [n, n+1].map(x => Math.max(0, slope*x+intercept));
+  }
+
+  // ── Customer concentration risk ─────────────────────────
+  let customerRisk = null;
+  if (customerKey && Object.keys(byCustomer).length) {
+    const topCustomers = Object.entries(byCustomer).sort((a,b)=>b[1]-a[1]).slice(0,3);
+    const topSum = topCustomers.reduce((s,[,v])=>s+v,0);
+    const pct = grand>0 ? Math.round(topSum/grand*100) : 0;
+    customerRisk = { topCustomers, pct };
+  }
+
+  // ── Slow movers (declining month-over-month) ────────────
+  let slowMovers = [];
+  if (dates.length >= 2) {
+    const lastM = dates[dates.length-1], prevM = dates[dates.length-2];
+    Object.entries(byProductByMonth).forEach(([prod, months]) => {
+      const last = months[lastM] || 0, prev = months[prevM] || 0;
+      if (prev > 0 && last < prev) {
+        slowMovers.push({ product: prod, prev, last, pct: Math.round((last-prev)/prev*100) });
+      }
+    });
+    slowMovers.sort((a,b)=>a.pct-b.pct);
+  }
+
+  // ── Render ───────────────────────────────────────────────
   dashEl.innerHTML = `
+    ${(originalRowCount || originalMonths) ? renderLimitBanner(originalRowCount, originalMonths) : ''}
     <div class="csv-dash-header">
       <div class="csv-kpi"><div class="csv-kpi-num">€ ${grand.toLocaleString('it-IT',{minimumFractionDigits:0,maximumFractionDigits:0})}</div><div class="csv-kpi-lbl">Total revenue</div></div>
       <div class="csv-kpi"><div class="csv-kpi-num">${count}</div><div class="csv-kpi-lbl">Transactions</div></div>
@@ -586,17 +703,26 @@ function renderDashboard(rows, dashEl, dropzone) {
         <div class="csv-bar-chart">
           ${topCats.map(([cat, val]) => `
             <div class="csv-bar-row">
-              <div class="csv-bar-label" title="${cat}">${cat.length>22?cat.slice(0,20)+'…':cat}</div>
-              <div class="csv-bar-track"><div class="csv-bar-fill" style="width:${(val/maxCat*100).toFixed(1)}%"></div></div>
+              <div class="csv-bar-label" title="${cat}">${cat.length>22?cat.slice(0,20)+'…':cat}${anomalyCats.has(cat)?' ⚠':''}</div>
+              <div class="csv-bar-track"><div class="csv-bar-fill ${anomalyCats.has(cat)?'csv-bar-fill-anomaly':''}" style="width:${(val/maxCat*100).toFixed(1)}%"></div></div>
               <div class="csv-bar-val">€${val.toFixed(0)}</div>
             </div>`).join('')}
         </div>
+        ${anomalyCats.size ? `<div class="csv-anomaly-note">⚠ Flagged: unusually high revenue vs other categories</div>` : ''}
       </div>
-      <div class="csv-chart-card">
-        <div class="csv-chart-title">Revenue over time</div>
-        <div id="csv-line" data-l='${JSON.stringify(dates)}' data-v='${JSON.stringify(dateVals)}'
-             style="width:100%"></div>
+
+      <div class="csv-chart-card csv-locked-card">
+        <div class="csv-chart-title">Revenue over time${forecastPoints.length ? ' + forecast' : ''}</div>
+        <div class="csv-locked-content">
+          <div id="csv-line" data-l='${JSON.stringify(dates)}' data-v='${JSON.stringify(dateVals)}' data-f='${JSON.stringify(forecastPoints)}' style="width:100%"></div>
+        </div>
+        <div class="csv-lock-overlay">
+          <div class="csv-lock-icon">🔒</div>
+          <div class="csv-lock-text">Forecasting unlocks in the full dashboard</div>
+          <a href="#contact" class="csv-lock-btn">Unlock full analytics →</a>
+        </div>
       </div>
+
       ${topProducts.length > 0 ? `
       <div class="csv-chart-card csv-chart-full">
         <div class="csv-chart-title">Top products by revenue</div>
@@ -617,49 +743,89 @@ function renderDashboard(rows, dashEl, dropzone) {
           </tbody>
         </table>
       </div>` : ''}
+
+      ${customerKey ? `
+      <div class="csv-chart-card csv-locked-card csv-chart-full">
+        <div class="csv-chart-title">Customer concentration risk</div>
+        <div class="csv-locked-content">
+          ${customerRisk ? `
+            <div class="csv-risk-line">Your top ${customerRisk.topCustomers.length} customers are <strong>${customerRisk.pct}%</strong> of revenue.</div>
+            <div class="csv-bar-chart">
+              ${customerRisk.topCustomers.map(([c,v])=>`
+                <div class="csv-bar-row">
+                  <div class="csv-bar-label">${c}</div>
+                  <div class="csv-bar-track"><div class="csv-bar-fill" style="width:${(v/customerRisk.topCustomers[0][1]*100).toFixed(1)}%"></div></div>
+                  <div class="csv-bar-val">€${v.toFixed(0)}</div>
+                </div>`).join('')}
+            </div>` : ''}
+        </div>
+        <div class="csv-lock-overlay">
+          <div class="csv-lock-icon">🔒</div>
+          <div class="csv-lock-text">Customer risk analysis unlocks in the full dashboard</div>
+          <a href="#contact" class="csv-lock-btn">Unlock full analytics →</a>
+        </div>
+      </div>` : ''}
+
+      ${slowMovers.length ? `
+      <div class="csv-chart-card csv-chart-full">
+        <div class="csv-chart-title">⚠ Slow movers (declining month-over-month)</div>
+        <table class="csv-top-table">
+          <thead><tr><th>Product</th><th>Prev month</th><th>Last month</th><th>Change</th></tr></thead>
+          <tbody>
+            ${slowMovers.slice(0,6).map(s => `
+              <tr>
+                <td>${s.product}</td>
+                <td>€${s.prev.toFixed(0)}</td>
+                <td>€${s.last.toFixed(0)}</td>
+                <td style="color:#f59e0b;font-weight:600">${s.pct}%</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>` : ''}
     </div>
+
     <div class="csv-privacy-note">
       🔒 Your data never left your browser — processed entirely client-side.
       This is exactly how we build your production dashboards.
     </div>
-    <div style="text-align:center;margin-top:20px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
-      <button id="csv-export-pdf-btn" class="btn-secondary" style="font-size:13px;padding:10px 20px">
-        ⬇ Export as PDF
-      </button>
+    <div style="text-align:center;margin-top:20px">
       <a href="#contact" class="btn-primary" style="font-size:13px;padding:10px 24px">
-        Build this for my real data →
+        Get this report for my full dataset →
       </a>
     </div>`;
 
   dashEl.style.display = 'block';
   requestAnimationFrame(() => drawLine('csv-line'));
-  document.getElementById('csv-export-pdf-btn')?.addEventListener('click', () => {
-  exportDashboardPDF({ grand, count, topCats, dates, dateVals, topProducts, growthPct });
-});
 }
 
 function drawLine(id) {
   const el = document.getElementById(id);
   if (!el) return;
-  const labels = JSON.parse(el.dataset.l || '[]');
-  const values = JSON.parse(el.dataset.v || '[]');
+  const labels   = JSON.parse(el.dataset.l || '[]');
+  const values   = JSON.parse(el.dataset.v || '[]');
+  const forecast = JSON.parse(el.dataset.f || '[]');
   if (!values.length) return;
 
+  const allVals = values.concat(forecast);
   const W = el.clientWidth || 320;
   const H = 130;
   const P = {t:16, r:12, b:28, l:44};
-  const maxV = Math.max(...values), minV = Math.min(...values);
+  const maxV = Math.max(...allVals), minV = Math.min(0, ...allVals);
   const range = maxV - minV || 1;
+  const totalPts = values.length + forecast.length;
 
-  const pts = values.map((v,i) => ({
-    x: P.l + (i / Math.max(values.length-1, 1)) * (W-P.l-P.r),
-    y: P.t + (1-(v-minV)/range) * (H-P.t-P.b),
-    v, l: labels[i],
-  }));
+  const scaleX = i => P.l + (i / Math.max(totalPts-1,1)) * (W-P.l-P.r);
+  const scaleY = v => P.t + (1-(v-minV)/range) * (H-P.t-P.b);
+
+  const pts  = values.map((v,i)   => ({ x: scaleX(i), y: scaleY(v), v, l: labels[i] }));
+  const fpts = forecast.map((v,i) => ({ x: scaleX(values.length+i), y: scaleY(v) }));
 
   const line = pts.map((p,i)=>`${i===0?'M':'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
   const fill = `${line} L${pts.at(-1).x},${H-P.b} L${pts[0].x},${H-P.b} Z`;
   const step = Math.max(1, Math.floor(pts.length/4));
+  const forecastLine = fpts.length
+    ? `M${pts.at(-1).x.toFixed(1)},${pts.at(-1).y.toFixed(1)} ` + fpts.map(p=>`L${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ')
+    : '';
 
   el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:${H}px;display:block;overflow:visible">
     <defs>
@@ -670,128 +836,11 @@ function drawLine(id) {
     </defs>
     <path d="${fill}" fill="url(#llg)"/>
     <path d="${line}" stroke="#4F8EF7" stroke-width="2" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+    ${forecastLine ? `<path d="${forecastLine}" stroke="#9B5DE5" stroke-width="2" fill="none" stroke-dasharray="5,4" stroke-linecap="round"/>` : ''}
     ${pts.map((p,i) => i%step===0 ? `
       <text x="${p.x}" y="${H-6}" text-anchor="middle"
             style="font-size:9px;fill:var(--text3);font-family:Inter,sans-serif">${p.l?.slice(0,7)||''}</text>` : '').join('')}
     ${pts.map(p => `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3.5" fill="#4F8EF7"/>`).join('')}
+    ${fpts.map(p => `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3" fill="#9B5DE5" opacity="0.7"/>`).join('')}
   </svg>`;
-}
-
-function buildPDFHtml(data) {
-  const items    = data.items || [];
-  const subtotal = items.reduce((s, i) => s + (i.qty * i.unit_price), 0);
-  const vat      = subtotal * 0.22;
-  const total    = subtotal + vat;
-  const docNum   = `PRV-${Date.now().toString(36).toUpperCase().slice(-8)}`;
-  const date     = new Date().toLocaleDateString('it-IT');
-
-  return `<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>${docNum}</title>
-<style>
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body { font-family: 'Helvetica Neue', Arial, sans-serif; font-size:13px; color:#1a1a2e; padding:40px; }
-  .header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:40px; padding-bottom:24px; border-bottom:2px solid #4F8EF7; }
-  .brand { font-size:24px; font-weight:700; color:#2563EB; letter-spacing:-0.03em; }
-  .brand span { color:#9B5DE5; }
-  .doc-info { text-align:right; }
-  .doc-num { font-size:18px; font-weight:700; color:#1a1a2e; }
-  .doc-date { font-size:12px; color:#666; margin-top:4px; }
-  .doc-type { display:inline-block; padding:3px 12px; background:#EBF0FF; color:#2563EB; border-radius:99px; font-size:11px; font-weight:600; margin-top:6px; }
-  .section { margin-bottom:28px; }
-  .section-label { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:#888; margin-bottom:8px; }
-  .customer-name { font-size:15px; font-weight:600; color:#1a1a2e; }
-  .customer-addr { font-size:12px; color:#555; margin-top:3px; }
-  table { width:100%; border-collapse:collapse; margin-bottom:20px; }
-  thead tr { background:#f8f9ff; }
-  th { text-align:left; padding:10px 12px; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#666; border-bottom:2px solid #e8ecff; }
-  td { padding:10px 12px; border-bottom:1px solid #f0f2ff; font-size:13px; }
-  tr:last-child td { border-bottom:none; }
-  .text-right { text-align:right; }
-  .font-bold { font-weight:600; }
-  .totals { margin-left:auto; width:240px; }
-  .total-row { display:flex; justify-content:space-between; padding:6px 0; font-size:13px; }
-  .total-row.grand { border-top:2px solid #4F8EF7; margin-top:4px; padding-top:10px; font-size:16px; font-weight:700; color:#2563EB; }
-  .conf-badge { display:inline-block; padding:4px 14px; border-radius:99px; font-size:11px; font-weight:700; background:#d1fae5; color:#065f46; }
-  .footer { margin-top:48px; padding-top:16px; border-top:1px solid #e8ecff; font-size:10px; color:#999; display:flex; justify-content:space-between; }
-</style>
-</head>
-<body>
-  <div class="header">
-    <div>
-      <div class="brand">Taluma<span>Flow</span></div>
-      <div style="font-size:10px;color:#aaa;margin-top:4px">AI Order Extraction Demo</div>
-    </div>
-    <div class="doc-info">
-      <div class="doc-num">${docNum}</div>
-      <div class="doc-date">${date}</div>
-      <div class="doc-type">PREVENTIVO / FATTURA</div>
-    </div>
-  </div>
-  <div class="section">
-    <div class="section-label">Customer</div>
-    <div class="customer-name">${data.client_name || 'Unknown Customer'}</div>
-    <div class="customer-addr">${data.client_address || ''}</div>
-    ${data.client_email ? `<div class="customer-addr">${data.client_email}</div>` : ''}
-  </div>
-  <div class="section">
-    <div class="section-label">Order items</div>
-    <table>
-      <thead><tr>
-        <th>Description</th>
-        <th class="text-right">Qty</th>
-        <th class="text-right">Unit Price</th>
-        <th class="text-right">Total</th>
-      </tr></thead>
-      <tbody>
-        ${items.map(i => `
-          <tr>
-            <td>${i.description}</td>
-            <td class="text-right">${i.qty}</td>
-            <td class="text-right">€ ${(+i.unit_price).toFixed(2)}</td>
-            <td class="text-right font-bold">€ ${(i.qty * i.unit_price).toFixed(2)}</td>
-          </tr>`).join('')}
-      </tbody>
-    </table>
-    <div class="totals">
-      <div class="total-row"><span>Subtotal</span><span>€ ${subtotal.toFixed(2)}</span></div>
-      <div class="total-row"><span>VAT 22%</span><span>€ ${vat.toFixed(2)}</span></div>
-      <div class="total-row grand"><span>Total</span><span>€ ${total.toFixed(2)}</span></div>
-    </div>
-  </div>
-  <div>
-    <span class="conf-badge">✓ AI Confidence: ${Math.round((data.confidence||0)*100)}%</span>
-  </div>
-  <div class="footer">
-    <span>Generated by TaalumaFlow · talumaflow.com</span>
-    <span>Payment due within 30 days</span>
-  </div>
-</body>
-</html>`;
-}
-
-export function generatePDF(data) {
-  generateAndDownloadPDF(data);
-}
-
-function generateAndDownloadPDF(data) {
-  const html = buildPDFHtml(data);
-  const w = window.open('', '_blank');
-  if (!w) return;
-  w.document.write(html);
-  w.document.close();
-  w.focus();
-
-  w.onafterprint = () => w.close();
-
-  setTimeout(() => {
-    w.print();
-    setTimeout(() => { if (!w.closed) w.close(); }, 1000); 
-  }, 500);
-}
-function generatePDFBase64(data) {
-  const html = buildPDFHtml(data);
-  return btoa(unescape(encodeURIComponent(html)));
 }

@@ -1071,3 +1071,54 @@ button, a, .btn-primary, .btn-secondary,
   border-radius: 12px;
   border: 1px solid var(--border);
 }
+
+
+.csv-limit-banner {
+  background: rgba(79,142,247,.08);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-size: 12px;
+  color: var(--blue);
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.csv-bar-fill-anomaly { background: linear-gradient(90deg,#ef4444,#dc2626) !important; }
+.csv-anomaly-note { font-size: 11px; color: #ef4444; margin-top: 10px; }
+
+.csv-locked-card { position: relative; overflow: hidden; }
+.csv-locked-content { filter: blur(4px); opacity: .55; pointer-events: none; user-select: none; }
+.csv-lock-overlay {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 8px; text-align: center; padding: 20px;
+  background: rgba(6,8,15,.35);
+}
+[data-theme="light"] .csv-lock-overlay { background: rgba(244,247,255,.5); }
+.csv-lock-icon { font-size: 24px; }
+.csv-lock-text { font-size: 12px; color: var(--text2); font-weight: 600; max-width: 220px; }
+.csv-lock-btn {
+  margin-top: 4px; padding: 8px 18px; border-radius: 8px;
+  background: linear-gradient(135deg, var(--blue2), var(--blue));
+  color: #fff; font-size: 12px; font-weight: 600;
+  text-decoration: none; transition: transform .2s;
+}
+.csv-lock-btn:hover { transform: translateY(-1px); }
+
+.csv-risk-line { font-size: 13px; color: var(--text); margin-bottom: 14px; }
+.csv-risk-line strong { color: #ef4444; }
+
+.csv-mapper {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 16px; padding: 28px; max-width: 420px; margin: 0 auto;
+}
+.csv-mapper-title { font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+.csv-mapper-sub { font-size: 12px; color: var(--text2); margin-bottom: 20px; }
+.csv-mapper-row { margin-bottom: 14px; }
+.csv-mapper-row label { display: block; font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 5px; }
+.csv-mapper-row select {
+  width: 100%; padding: 9px 12px; border-radius: 8px;
+  background: var(--surface2); border: 1px solid var(--border);
+  color: var(--text); font-size: 13px;
+}
