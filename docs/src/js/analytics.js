@@ -45,6 +45,7 @@ const TOOLS = {
     mode:    'csv',
     params:  [],
     columns: 'Needs: product, qty, price columns',
+    endpoint: 'price-sensitivity',
   },
 };
 
@@ -324,7 +325,7 @@ async function handleFile(file, toolKey, container) {
   try {
     if (!IS_BACKEND_CONFIGURED) throw new Error('no_backend');
 
-    const res = await fetch(`${BACKEND_URL}/api/analytics/${toolKey}/`, {
+      const res = await fetch(`${BACKEND_URL}/api/analytics/${tool.endpoint || toolKey}/`, {
       method: 'POST',
       body: formData,
     });
