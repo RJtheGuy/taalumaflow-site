@@ -1,0 +1,122 @@
+// Ordered newest-first. Add a new entry at the top whenever you ship something —
+// that's the only maintenance this feature needs.
+const CHANGELOG = [
+  {
+    id: 'churn-forecast-inventory-pdf',
+    date: '2026-09-18',
+    tag: 'new',
+    title: 'PDF export for all Data Lab tools',
+    desc: 'Demand Forecast, Churn Predictor, and Inventory Optimizer now each export a branded PDF report.',
+  },
+  {
+    id: 'dashboard-limits',
+    date: '2026-09-18',
+    tag: 'improved',
+    title: 'Smarter demo dashboards',
+    desc: 'Data Lab now flags unusual revenue categories, shows a 2-month forecast trend, and highlights slow-moving products automatically.',
+  },
+  {
+    id: 'data-lab-errors',
+    date: '2026-09-16',
+    tag: 'fixed',
+    title: 'Clearer error messages',
+    desc: "Uploading a CSV with the wrong columns now explains what's needed and offers a sample file — instead of a raw error.",
+  },
+  {
+    id: 'chat-mobile-overlap',
+    date: '2026-09-14',
+    tag: 'fixed',
+    title: 'Mobile chat fixed',
+    desc: 'The floating chat bubble no longer overlaps the send button on small screens, and the chat panel now has a close button.',
+  },
+];
+
+const SEEN_KEY = 'tf_changelog_last_seen_id';
+const TAG_LABEL = { new: 'New', improved: 'Improved', fixed: 'Fixed' };
+
+export function initChangelog() {
+  const btn     = document.getElementById('changelog-btn');
+  const badge   = document.getElementById('changelog-badge');
+  const panel   = document.getElementById('changelog-panel');
+  const closeBtn = document.getElementById('changelog-close');
+  const listEl  = document.getElementById('changelog-list');
+  if (!btn || !panel || !listEl) return;
+
+  renderList(listEl);
+  updateBadge(badge);
+
+  btn.addEventListener('click', () => {
+    const isOpen = panel.classList.toggle('open');
+    btn.setAttribute('aria-expanded', String(isOpen));
+    if (isOpen) markAllSeen(badge);
+  });
+
+  closeBtn?.addEventListener('click', () => {
+    panel.classList.remove('open');
+    btn.setAttribute('aria-expanded', 'false');
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!panel.classList.contains('open')) return;
+    if (panel.contains(e.target) || btn.contains(e.target)) return;
+    panel.classList.remove('open');
+    btn.setAttribute('aria-expanded', 'false');
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && panel.classList.contains('open')) {
+      panel.classList.remove('open');
+      btn.setAttribute('aria-expanded', 'false');
+    }
+  });
+}
+
+function renderList(listEl) {
+  listEl.innerHTML = CHANGELOG.map(item => `
+    <div class="changelog-item">
+      <div class="changelog-item-top">
+        <span class="changelog-tag changelog-tag-${item.tag}">${TAG_LABEL[item.tag] || item.tag}</span>
+        <span class="changelog-date">${formatDate(item.date)}</span>
+      </div>
+      <div class="changelog-item-title">${item.title}</div>
+      <div class="changelog-item-desc">${item.desc}</div>
+    </div>`).join('');
+}
+
+function formatDate(iso) {
+  const d = new Date(iso + 'T00:00:00');
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+}
+
+function getUnseenCount() {
+  let lastSeenId;
+  try {
+    lastSeenId = localStorage.getItem(SEEN_KEY);
+  } catch { lastSeenId = null; }
+
+  if (!lastSeenId) return CHANGELOG.length;
+
+  const idx = CHANGELOG.findIndex(item => item.id === lastSeenId);
+  return idx === -1 ? CHANGELOG.length : idx;
+}
+
+function updateBadge(badge) {
+  if (!badge) return;
+  const count = getUnseenCount();
+  if (count > 0) {
+    badge.textContent = count > 9 ? '9+' : String(count);
+    badge.style.display = 'flex';
+    badge.closest('.changelog-btn')?.classList.add('has-updates');
+  } else {
+    badge.style.display = 'none';
+    badge.closest('.changelog-btn')?.classList.remove('has-updates');
+  }
+}
+
+function markAllSeen(badge) {
+  if (CHANGELOG.length === 0) return;
+  try {
+    localStorage.setItem(SEEN_KEY, CHANGELOG[0].id);
+  } catch { /* localStorage unavailable — badge just won't persist across visits */ }
+  updateBadge(badge);
+}

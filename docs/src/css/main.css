@@ -1122,3 +1122,133 @@ button, a, .btn-primary, .btn-secondary,
   background: var(--surface2); border: 1px solid var(--border);
   color: var(--text); font-size: 13px;
 }
+
+
+
+.changelog-btn {
+  position: relative;
+  width: 38px; height: 38px;
+  border-radius: 10px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  transition: all .2s;
+}
+.changelog-btn:hover { border-color: var(--border2); transform: translateY(-1px); }
+.changelog-btn.has-updates { animation: changelog-pulse 2s ease-in-out infinite; }
+@keyframes changelog-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,.4); }
+  50% { box-shadow: 0 0 0 6px rgba(239,68,68,0); }
+}
+
+.changelog-badge {
+  position: absolute; top: -5px; right: -5px;
+  min-width: 16px; height: 16px; padding: 0 4px;
+  border-radius: 99px;
+  background: #ef4444; color: #fff;
+  font-size: 9px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  border: 2px solid var(--bg);
+}
+
+.changelog-panel {
+  position: fixed; top: 64px; right: 48px; z-index: 300;
+  width: 340px; max-height: 70vh;
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  border-radius: 16px;
+  box-shadow: 0 24px 80px var(--shadow);
+  overflow: hidden;
+  transform: translateY(-10px) scale(.97); opacity: 0; pointer-events: none;
+  transition: opacity .2s cubic-bezier(.4,0,.2,1), transform .2s cubic-bezier(.4,0,.2,1);
+  display: flex; flex-direction: column;
+}
+.changelog-panel.open { transform: translateY(0) scale(1); opacity: 1; pointer-events: all; }
+
+.changelog-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 18px; border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.changelog-title { font-family: 'Space Grotesk', sans-serif; font-size: 14px; font-weight: 700; color: var(--text); }
+.changelog-close {
+  background: none; border: 1px solid var(--border); border-radius: 6px;
+  width: 26px; height: 26px; color: var(--text3);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  font-size: 12px; transition: all .2s;
+}
+.changelog-close:hover { color: var(--text); border-color: var(--border2); }
+
+.changelog-list { overflow-y: auto; padding: 8px; }
+.changelog-item { padding: 12px; border-radius: 10px; transition: background .2s; }
+.changelog-item:hover { background: var(--surface2); }
+.changelog-item-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.changelog-date { font-size: 10px; color: var(--text3); }
+
+.changelog-tag {
+  font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
+  padding: 2px 8px; border-radius: 99px;
+}
+.changelog-tag-new      { background: rgba(79,142,247,.15); color: var(--blue); }
+.changelog-tag-improved { background: rgba(34,197,94,.15); color: var(--green); }
+.changelog-tag-fixed    { background: rgba(245,158,11,.15); color: #f59e0b; }
+
+.changelog-item-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+.changelog-item-desc { font-size: 12px; color: var(--text2); line-height: 1.5; }
+
+@media (max-width: 700px) {
+  .changelog-panel { right: 16px; left: 16px; width: auto; top: 60px; }
+}
+
+.ecm-honeypot {
+  position: absolute;
+  left: -9999px;
+  top: -9999px;
+  height: 0;
+  width: 0;
+  overflow: hidden;
+}
+
+.ecm-consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 16px;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--text2);
+  line-height: 1.5;
+}
+.ecm-consent input[type="checkbox"] {
+  width: 16px; height: 16px;
+  margin-top: 1px;
+  flex-shrink: 0;
+  accent-color: var(--blue);
+  cursor: pointer;
+}
+
+.ecm-consent-error {
+  font-size: 11px;
+  color: #ef4444;
+  margin: -10px 0 12px;
+}
+
+.ecm-btn-primary:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.aw-cat-teaser {
+  margin-top: 16px; padding-top: 16px;
+  border-top: 1px solid var(--border);
+  font-size: 12px; color: var(--text3); line-height: 1.5;
+}
+
+.aw-elasticity-note {
+  margin-top: 14px; padding: 12px 14px;
+  background: var(--surface2); border-radius: 10px;
+  font-size: 11px; color: var(--text3); line-height: 1.6;
+}

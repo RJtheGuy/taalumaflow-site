@@ -1,10 +1,12 @@
 import { BACKEND_URL, IS_BACKEND_CONFIGURED } from './config.js';
+import { escapeHtml } from './sanitize.js';
 
 const TOOLS = {
   forecast: {
     label:   'Demand Forecast',
     icon:    '📈',
     desc:    'Predict next 4–8 weeks of product demand',
+    mode:    'csv',
     params:  [{ id: 'weeks', label: 'Weeks ahead', type: 'number', default: 8, min: 1, max: 52 }],
     columns: 'Needs: product, qty columns. Optional: date',
   },
@@ -12,6 +14,7 @@ const TOOLS = {
     label:   'Churn Predictor',
     icon:    '⚠️',
     desc:    'Find customers who stopped ordering',
+    mode:    'csv',
     params:  [
       { id: 'churn_days',   label: 'Churned after (days)',  type: 'number', default: 60, min: 1 },
       { id: 'warning_days', label: 'At-risk after (days)',  type: 'number', default: 30, min: 1 },
@@ -22,11 +25,26 @@ const TOOLS = {
     label:   'Inventory Optimizer',
     icon:    '📦',
     desc:    'Calculate reorder points and optimal order quantities',
+    mode:    'csv',
     params:  [
       { id: 'lead_days',  label: 'Lead time (days)',     type: 'number', default: 7,  min: 1 },
       { id: 'order_cost', label: 'Order cost (€)',       type: 'number', default: 50, min: 0 },
     ],
     columns: 'Needs: product, qty columns. Optional: unit_price',
+  },
+  classifier: {
+    label: 'Document Classifier',
+    icon:  '🗂️',
+    desc:  'Route emails and messages to the right category automatically',
+    mode:  'text',
+  },
+    price_sensitivity: {
+    label:   'Price Sensitivity',
+    icon:    '💰',
+    desc:    'See which products are price-elastic vs safe to reprice',
+    mode:    'csv',
+    params:  [],
+    columns: 'Needs: product, qty, price columns',
   },
 };
 
@@ -47,7 +65,47 @@ Distribuzione Nord,2026-03-05,510`,
 Olio EVO Frantoio,120,12.00
 Vino Rosso Toscano,80,18.00
 Pasta Di Martino,300,1.80`,
+  price_sensitivity: `product,qty,price
+Olio EVO Frantoio,20,10.00
+Olio EVO Frantoio,15,12.00
+Olio EVO Frantoio,10,14.00
+Vino Rosso Toscano,30,15.00
+Vino Rosso Toscano,28,16.00
+Vino Rosso Toscano,25,17.00
+Pasta Di Martino,50,1.50
+Pasta Di Martino,48,1.60
+Pasta Di Martino,45,1.70`,
 };
+
+const CLASSIFIER_EXAMPLES = [
+  {
+    label: 'New order',
+    text: `Ciao! Sono Marco da Distribuzione Nord. Mi servono 5x Olio EVO Frantoio e 3x Pasta a prezzi di listino. Grazie`,
+  },
+  {
+    label: 'Complaint',
+    text: `Buongiorno, l'ultima consegna conteneva 2 bottiglie rotte e il prodotto era scaduto. Non è la prima volta che succede, mi aspetto un rimborso.`,
+  },
+  {
+    label: 'Invoice question',
+    text: `Hi, I received invoice PRV-2291 but the total doesn't match what we agreed on the phone. Can you check and resend?`,
+  },
+  {
+    label: 'Spam',
+    text: `CONGRATULATIONS! You've been selected to win a free vacation. Click here now to claim your prize before it expires!!!`,
+  },
+];
+
+const CATEGORY_STYLE = {
+  order:            { color: 'var(--green)',  icon: '🛒' },
+  invoice_payment:  { color: 'var(--blue)',   icon: '🧾' },
+  complaint:        { color: '#ef4444',       icon: '⚠️' },
+  delivery:         { color: '#f59e0b',       icon: '🚚' },
+  inquiry:          { color: 'var(--text2)',  icon: '💬' },
+  spam:             { color: 'var(--text3)',  icon: '🚫' },
+};
+
+let classifierExampleIndex = 0;
 
 function downloadSample(toolKey) {
   const blob = new Blob([SAMPLE_CSV[toolKey]], { type: 'text/csv' });
@@ -69,7 +127,7 @@ function parseError(rawMessage, tool) {
       technical: m,
     };
   }
-  return { friendly: `Something went wrong reading this file. Try the sample CSV below to see the expected format.`, technical: m };
+  return { friendly: `Something went wrong. Please try again in a moment.`, technical: m };
 }
 
 export function initAnalyticsWidget() {
@@ -100,8 +158,54 @@ function renderToolPicker(container) {
   });
 }
 
+
+function renderPriceSensitivity(toolKey, tool, data, el) {
+  const classColor = c => c==='elastic' ? '#ef4444' : c==='inelastic' ? 'var(--green)' : c==='unusual' ? '#9B5DE5' : 'var(--text3)';
+  const classLabel = c => c==='elastic' ? '🔴 Elastic' : c==='inelastic' ? '🟢 Inelastic' : c==='unusual' ? '🟣 Unusual' : '⚪ Not enough data';
+
+  el.innerHTML = `
+    <div class="aw-results-header">
+      <div class="aw-stat"><div class="aw-stat-num">${data.total}</div><div class="aw-stat-lbl">Products</div></div>
+      <div class="aw-stat"><div class="aw-stat-num" style="color:#ef4444">${data.elastic}</div><div class="aw-stat-lbl">🔴 Price-elastic</div></div>
+    </div>
+
+    <div class="aw-table-wrap">
+      <table class="aw-table">
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Price range</th>
+            <th>Avg price</th>
+            <th>Total qty</th>
+            <th>Elasticity</th>
+            <th>Classification</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${data.results.map(r => `
+            <tr>
+              <td>${escapeHtml(r.product)}</td>
+              <td>€${r.min_price.toFixed(2)}–€${r.max_price.toFixed(2)}</td>
+              <td>€${r.avg_price.toFixed(2)}</td>
+              <td>${r.total_qty}</td>
+              <td>${r.elasticity !== null ? r.elasticity : '—'}</td>
+              <td style="color:${classColor(r.classification)};font-weight:600">${classLabel(r.classification)}</td>
+            </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+    <div class="aw-elasticity-note">
+      🔴 <strong>Elastic</strong> = demand drops sharply as price rises — risky to raise price.
+      🟢 <strong>Inelastic</strong> = demand holds steady — safer room to reprice.
+    </div>
+    ${ctaBlock(true)}`;
+
+  document.getElementById('aw-pdf-btn')?.addEventListener('click', () => exportAnalyticsPDF(toolKey, tool, data));
+}
+
 function renderUpload(container, toolKey) {
   const tool = TOOLS[toolKey];
+  const isText = tool.mode === 'text';
 
   container.innerHTML = `
     <div class="aw-section">
@@ -111,23 +215,38 @@ function renderUpload(container, toolKey) {
       </div>
 
       <div class="aw-panel">
-        <div class="aw-upload-area" id="aw-drop">
-          <input type="file" id="aw-file" accept=".csv"
-                 style="position:absolute;inset:0;opacity:0;cursor:pointer;z-index:2">
-          <div class="aw-upload-icon">📂</div>
-          <div class="aw-upload-title">Drop your CSV here or click to browse</div>
-          <div class="aw-upload-hint">${tool.columns}</div>
-        </div>
+        ${isText ? `
+          <div class="aw-text-input-area">
+            <div class="aw-text-input-hdr">
+              <label for="aw-classify-text">Paste an email, WhatsApp message, or note</label>
+              <span class="aw-example-label" id="aw-example-label">${escapeHtml(CLASSIFIER_EXAMPLES[0].label)}</span>
+            </div>
+            <textarea id="aw-classify-text" class="aw-textarea" maxlength="3000"
+              placeholder="Paste any customer message here…">${escapeHtml(CLASSIFIER_EXAMPLES[0].text)}</textarea>
+            <div class="aw-text-actions">
+              <button class="aw-classify-btn" id="aw-classify-run">▶ Classify</button>
+              <button class="aw-cycle-btn" id="aw-classify-cycle">↻ Try another example</button>
+            </div>
+          </div>
+        ` : `
+          <div class="aw-upload-area" id="aw-drop">
+            <input type="file" id="aw-file" accept=".csv"
+                   style="position:absolute;inset:0;opacity:0;cursor:pointer;z-index:2">
+            <div class="aw-upload-icon">📂</div>
+            <div class="aw-upload-title">Drop your CSV here or click to browse</div>
+            <div class="aw-upload-hint">${tool.columns}</div>
+          </div>
 
-        <div class="aw-params">
-          ${tool.params.map(p => `
-            <div class="aw-param">
-              <label for="aw-${p.id}">${p.label}</label>
-              <input type="${p.type}" id="aw-${p.id}"
-                     value="${p.default}" min="${p.min || 0}"
-                     class="aw-param-input">
-            </div>`).join('')}
-        </div>
+          <div class="aw-params">
+            ${tool.params.map(p => `
+              <div class="aw-param">
+                <label for="aw-${p.id}">${p.label}</label>
+                <input type="${p.type}" id="aw-${p.id}"
+                       value="${p.default}" min="${p.min || 0}"
+                       class="aw-param-input">
+              </div>`).join('')}
+          </div>
+        `}
       </div>
 
       <div id="aw-status" style="min-height:20px;font-size:12px;color:var(--text3);text-align:center;margin-top:16px"></div>
@@ -142,6 +261,32 @@ function renderUpload(container, toolKey) {
     </div>`;
 
   document.getElementById('aw-back')?.addEventListener('click', () => renderToolPicker(container));
+
+  if (isText) {
+    const textarea  = document.getElementById('aw-classify-text');
+    const runBtn    = document.getElementById('aw-classify-run');
+    const cycleBtn  = document.getElementById('aw-classify-cycle');
+    const exampleLbl = document.getElementById('aw-example-label');
+
+    cycleBtn.addEventListener('click', () => {
+      classifierExampleIndex = (classifierExampleIndex + 1) % CLASSIFIER_EXAMPLES.length;
+      const ex = CLASSIFIER_EXAMPLES[classifierExampleIndex];
+      textarea.value = ex.text;
+      exampleLbl.textContent = ex.label;
+      document.getElementById('aw-results').innerHTML = '';
+      document.getElementById('aw-status').textContent = '';
+    });
+
+    runBtn.addEventListener('click', () => handleClassify(textarea.value, container));
+
+    textarea.addEventListener('keydown', e => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        runBtn.click();
+      }
+    });
+    return;
+  }
 
   const dropzone = document.getElementById('aw-drop');
   const fileInput = document.getElementById('aw-file');
@@ -209,18 +354,76 @@ async function handleFile(file, toolKey, container) {
   }
 }
 
+async function handleClassify(text, container) {
+  const status    = document.getElementById('aw-status');
+  const resultsEl = document.getElementById('aw-results');
+  const runBtn    = document.getElementById('aw-classify-run');
+  const tool      = TOOLS.classifier;
+
+  const trimmed = (text || '').trim();
+  if (!trimmed) {
+    status.style.color = 'var(--red, #ef4444)';
+    status.textContent = 'Paste a message first.';
+    return;
+  }
+
+  runBtn.disabled = true;
+  status.textContent = '⏳ Classifying…';
+  status.style.color = 'var(--text3)';
+  resultsEl.innerHTML = '';
+
+  try {
+    if (!IS_BACKEND_CONFIGURED) throw new Error('no_backend');
+
+    const res = await fetch(`${BACKEND_URL}/api/public/classify/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: trimmed }),
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || `HTTP ${res.status}`);
+    }
+
+    const data = await res.json();
+    status.textContent = `✓ Classified as ${data.label}`;
+    status.style.color = 'var(--green)';
+
+    renderClassifierResult(data, resultsEl);
+
+  } catch (err) {
+    status.textContent = '';
+
+    if (err.message === 'no_backend') {
+      status.style.color = 'var(--red, #ef4444)';
+      status.textContent = '⚡ Backend not connected — book a demo to run this on your data.';
+      runBtn.disabled = false;
+      return;
+    }
+
+    const { friendly, technical } = parseError(err.message, tool);
+    renderError(friendly, technical, 'classifier', resultsEl);
+  }
+
+  runBtn.disabled = false;
+}
+
 function renderError(friendly, technical, toolKey, el) {
+  const showSample = toolKey !== 'classifier';
   el.innerHTML = `
     <div class="aw-error">
-      <div class="aw-error-title">⚠️ ${friendly}</div>
+      <div class="aw-error-title">⚠️ ${escapeHtml(friendly)}</div>
       <div class="aw-error-actions">
-        <button class="aw-sample-btn" id="aw-sample-dl">↓ Download sample CSV</button>
+        ${showSample ? `<button class="aw-sample-btn" id="aw-sample-dl">↓ Download sample CSV</button>` : ''}
         <button class="aw-details-toggle" id="aw-details-toggle">Show technical details</button>
       </div>
-      <div class="aw-error-details" id="aw-error-details" style="display:none">${technical}</div>
+      <div class="aw-error-details" id="aw-error-details" style="display:none">${escapeHtml(technical)}</div>
     </div>`;
 
-  document.getElementById('aw-sample-dl')?.addEventListener('click', () => downloadSample(toolKey));
+  if (showSample) {
+    document.getElementById('aw-sample-dl')?.addEventListener('click', () => downloadSample(toolKey));
+  }
   document.getElementById('aw-details-toggle')?.addEventListener('click', (e) => {
     const details = document.getElementById('aw-error-details');
     const isHidden = details.style.display === 'none';
@@ -231,9 +434,10 @@ function renderError(friendly, technical, toolKey, el) {
 
 function renderResults(toolKey, data, el) {
   const tool = TOOLS[toolKey];
-  if (toolKey === 'forecast')  renderForecast(toolKey, tool, data, el);
-  if (toolKey === 'churn')     renderChurn(toolKey, tool, data, el);
-  if (toolKey === 'inventory') renderInventory(toolKey, tool, data, el);
+  if (toolKey === 'forecast')          renderForecast(toolKey, tool, data, el);
+  if (toolKey === 'churn')             renderChurn(toolKey, tool, data, el);
+  if (toolKey === 'inventory')         renderInventory(toolKey, tool, data, el);
+  if (toolKey === 'price_sensitivity') renderPriceSensitivity(toolKey, tool, data, el);
 }
 
 function renderForecast(toolKey, tool, data, el) {
@@ -269,7 +473,7 @@ function renderForecast(toolKey, tool, data, el) {
         <tbody>
           ${data.results.map(r => `
             <tr>
-              <td>${r.product}</td>
+              <td>${escapeHtml(r.product)}</td>
               <td>${r.avg_weekly}</td>
               <td style="color:${trendColor(r.trend)}">${trendIcon(r.trend)} ${r.trend}</td>
               <td>
@@ -293,7 +497,7 @@ function renderForecast(toolKey, tool, data, el) {
         </tbody>
       </table>
     </div>
-    ${ctaBlock()}`;
+    ${ctaBlock(true)}`;
 
   document.getElementById('aw-pdf-btn')?.addEventListener('click', () => exportAnalyticsPDF(toolKey, tool, data));
 }
@@ -325,17 +529,17 @@ function renderChurn(toolKey, tool, data, el) {
         <tbody>
           ${data.results.map(r => `
             <tr>
-              <td>${r.customer}</td>
+              <td>${escapeHtml(r.customer)}</td>
               <td style="color:${statusColor(r.status)};font-weight:600">${statusLabel(r.status)}</td>
               <td>${r.days_since}d</td>
-              <td>${r.last_order}</td>
+              <td>${escapeHtml(r.last_order)}</td>
               <td>${r.order_count}</td>
               <td>${r.total_revenue > 0 ? '€'+r.total_revenue.toLocaleString('it-IT',{minimumFractionDigits:2}) : '—'}</td>
             </tr>`).join('')}
         </tbody>
       </table>
     </div>
-    ${ctaBlock()}`;
+    ${ctaBlock(true)}`;
 
   document.getElementById('aw-pdf-btn')?.addEventListener('click', () => exportAnalyticsPDF(toolKey, tool, data));
 }
@@ -367,7 +571,7 @@ function renderInventory(toolKey, tool, data, el) {
         <tbody>
           ${data.results.map(r => `
             <tr>
-              <td>${r.product}</td>
+              <td>${escapeHtml(r.product)}</td>
               <td>${r.avg_daily}</td>
               <td>${r.safety_stock}</td>
               <td>
@@ -385,12 +589,77 @@ function renderInventory(toolKey, tool, data, el) {
         </tbody>
       </table>
     </div>
-    ${ctaBlock()}`;
+    ${ctaBlock(true)}`;
 
   document.getElementById('aw-pdf-btn')?.addEventListener('click', () => exportAnalyticsPDF(toolKey, tool, data));
 }
 
-function ctaBlock() {
+// function renderClassifierResult(data, el) {
+//   const style = CATEGORY_STYLE[data.category] || { color: 'var(--text2)', icon: '📄' };
+//   const confPct = Math.round((data.confidence || 0) * 100);
+
+//   el.innerHTML = `
+//     <div class="aw-classify-result">
+//       <div class="aw-cat-badge" style="border-color:${style.color};color:${style.color}">
+//         <span>${style.icon}</span>
+//         <span>${escapeHtml(data.label)}</span>
+//       </div>
+
+//       <div class="demo-conf-row" style="margin-top:16px">
+//         <span>Confidence</span>
+//         <strong style="color:${style.color}">${confPct}%</strong>
+//       </div>
+//       <div class="demo-conf-bg">
+//         <div class="demo-conf-fill" style="width:${confPct}%;background:${style.color}"></div>
+//       </div>
+
+//       ${data.reasoning ? `<div class="aw-cat-reasoning">"${escapeHtml(data.reasoning)}"</div>` : ''}
+
+//       ${data.all_categories?.length ? `
+//         <div class="aw-cat-legend">
+//           <div class="aw-cat-legend-title">All categories this router checks for:</div>
+//           <div class="aw-cat-legend-list">
+//             ${data.all_categories.map(c => `
+//               <span class="aw-cat-chip ${c.key === data.category ? 'aw-cat-chip-active' : ''}">
+//                 ${escapeHtml(c.label)}
+//               </span>`).join('')}
+//           </div>
+//         </div>` : ''}
+//     </div>
+//     ${ctaBlock(false)}`;
+// }
+
+
+function renderClassifierResult(data, el) {
+  const style = CATEGORY_STYLE[data.category] || { color: 'var(--text2)', icon: '📄' };
+  const confPct = Math.round((data.confidence || 0) * 100);
+
+  el.innerHTML = `
+    <div class="aw-classify-result">
+      <div class="aw-cat-badge" style="border-color:${style.color};color:${style.color}">
+        <span>${style.icon}</span>
+        <span>${escapeHtml(data.label)}</span>
+      </div>
+
+      <div class="demo-conf-row" style="margin-top:16px">
+        <span>Confidence</span>
+        <strong style="color:${style.color}">${confPct}%</strong>
+      </div>
+      <div class="demo-conf-bg">
+        <div class="demo-conf-fill" style="width:${confPct}%;background:${style.color}"></div>
+      </div>
+
+      ${data.reasoning ? `<div class="aw-cat-reasoning">"${escapeHtml(data.reasoning)}"</div>` : ''}
+
+      <div class="aw-cat-teaser">
+        This is one category out of several our router checks for — built to match
+        your actual inbox categories, not a generic set.
+      </div>
+    </div>
+    ${ctaBlock(false)}`;
+}
+
+function ctaBlock(showPdf) {
   return `
     <div class="aw-cta">
       <div class="aw-cta-text">
@@ -398,7 +667,7 @@ function ctaBlock() {
         This is exactly how we build your production analytics.
       </div>
       <div class="aw-cta-actions">
-        <button class="aw-pdf-btn" id="aw-pdf-btn">⬇ Export as PDF</button>
+        ${showPdf ? `<button class="aw-pdf-btn" id="aw-pdf-btn">⬇ Export as PDF</button>` : ''}
         <a href="#contact" class="btn-primary" style="font-size:13px;padding:10px 24px">
           Build this for my real data →
         </a>
@@ -474,6 +743,10 @@ function getKPIsForTool(toolKey, data) {
     { label: 'At risk', value: data.at_risk },
     { label: 'Revenue at risk', value: `€${data.revenue_at_risk.toLocaleString('it-IT',{minimumFractionDigits:0})}`, accent:true },
   ];
+  if (toolKey === 'price_sensitivity') return [
+    { label: 'Products', value: data.total },
+    { label: 'Price-elastic', value: data.elastic, accent:true },
+  ];
   return [
     { label: 'Products', value: data.total },
     { label: 'Lead time', value: `${data.lead_days}d` },
@@ -483,11 +756,13 @@ function getKPIsForTool(toolKey, data) {
 
 function getTableHtmlForTool(toolKey, data) {
   if (toolKey === 'forecast') return `<table><thead><tr><th>Product</th><th>Avg/Week</th><th>Trend</th><th>Total needed</th></tr></thead>
-    <tbody>${data.results.map(r=>`<tr><td>${r.product}</td><td>${r.avg_weekly}</td><td>${r.trend}</td><td>${r.total_forecast}</td></tr>`).join('')}</tbody></table>`;
+    <tbody>${data.results.map(r=>`<tr><td>${escapeHtml(r.product)}</td><td>${r.avg_weekly}</td><td>${r.trend}</td><td>${r.total_forecast}</td></tr>`).join('')}</tbody></table>`;
   if (toolKey === 'churn') return `<table><thead><tr><th>Customer</th><th>Status</th><th>Days since</th><th>Last order</th><th>Revenue</th></tr></thead>
-    <tbody>${data.results.map(r=>`<tr><td>${r.customer}</td><td>${r.status}</td><td>${r.days_since}d</td><td>${r.last_order}</td><td>${r.total_revenue>0?'€'+r.total_revenue.toFixed(2):'—'}</td></tr>`).join('')}</tbody></table>`;
+    <tbody>${data.results.map(r=>`<tr><td>${escapeHtml(r.customer)}</td><td>${r.status}</td><td>${r.days_since}d</td><td>${escapeHtml(r.last_order)}</td><td>${r.total_revenue>0?'€'+r.total_revenue.toFixed(2):'—'}</td></tr>`).join('')}</tbody></table>`;
+  if (toolKey === 'price_sensitivity') return `<table><thead><tr><th>Product</th><th>Price range</th><th>Avg price</th><th>Total qty</th><th>Elasticity</th><th>Classification</th></tr></thead>
+    <tbody>${data.results.map(r=>`<tr><td>${escapeHtml(r.product)}</td><td>€${r.min_price.toFixed(2)}–€${r.max_price.toFixed(2)}</td><td>€${r.avg_price.toFixed(2)}</td><td>${r.total_qty}</td><td>${r.elasticity!==null?r.elasticity:'—'}</td><td>${r.classification}</td></tr>`).join('')}</tbody></table>`;
   return `<table><thead><tr><th>Product</th><th>Avg/Day</th><th>Reorder point</th><th>EOQ</th><th>Risk</th></tr></thead>
-    <tbody>${data.results.map(r=>`<tr><td>${r.product}</td><td>${r.avg_daily}</td><td>${r.reorder_point}</td><td>${r.eoq}</td><td>${r.demand_risk}</td></tr>`).join('')}</tbody></table>`;
+    <tbody>${data.results.map(r=>`<tr><td>${escapeHtml(r.product)}</td><td>${r.avg_daily}</td><td>${r.reorder_point}</td><td>${r.eoq}</td><td>${r.demand_risk}</td></tr>`).join('')}</tbody></table>`;
 }
 
 function exportAnalyticsPDF(toolKey, tool, data) {

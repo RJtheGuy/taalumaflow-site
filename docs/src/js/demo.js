@@ -1,5 +1,5 @@
-import { PUBLIC_API, IS_BACKEND_CONFIGURED } from './config.js';
-import { exportDashboardPDF } from './dashboard_pdf.js';
+import { PUBLIC_API, BACKEND_URL, IS_BACKEND_CONFIGURED } from './config.js';
+import { escapeHtml } from './sanitize.js';
 
 const EXAMPLES = [
   {
@@ -35,6 +35,10 @@ Thank you`,
 
 let currentExample = 0;
 
+// ═══════════════════════════════════════════════════════════
+// EXTRACTION DEMO
+// ═══════════════════════════════════════════════════════════
+
 export function initExtractionDemo() {
   const textarea  = document.getElementById('demo-input');
   const runBtn    = document.getElementById('demo-run-btn');
@@ -46,7 +50,6 @@ export function initExtractionDemo() {
 
   textarea.value = EXAMPLES[0].text;
 
-  // Show backend status
   if (!IS_BACKEND_CONFIGURED) {
     const hint = document.getElementById('demo-backend-hint');
     if (hint) hint.style.display = 'block';
@@ -88,6 +91,53 @@ export function initExtractionDemo() {
   });
 }
 
+// function showEmailCapture(onSubmit, onSkip) {
+//   document.getElementById('email-capture-modal')?.remove();
+
+//   const modal = document.createElement('div');
+//   modal.id = 'email-capture-modal';
+//   modal.innerHTML = `
+//     <div class="ecm-backdrop"></div>
+//     <div class="ecm-box">
+//       <div class="ecm-title">One second before we run the AI 🤖</div>
+//       <div class="ecm-sub">Drop your email or WhatsApp number to get the result sent to you — or skip and just see it here.</div>
+//       <input class="ecm-input" id="ecm-email" type="text" inputmode="email"
+//         placeholder="📧 email or 📱 +39 328 9741517" autocomplete="email">
+//       <div class="ecm-actions">
+//         <button class="ecm-btn-primary" id="ecm-submit">
+//           Extract &amp; send me the result →
+//         </button>
+//         <button class="ecm-btn-skip" id="ecm-skip">
+//           Just show me the demo
+//         </button>
+//       </div>
+//       <div class="ecm-note">No spam. We use this to send you the extracted document.</div>
+//     </div>`;
+//   document.body.appendChild(modal);
+
+//   setTimeout(() => document.getElementById('ecm-email')?.focus(), 100);
+
+//   document.getElementById('ecm-submit').addEventListener('click', () => {
+//     const email = document.getElementById('ecm-email')?.value.trim();
+//     modal.remove();
+//     onSubmit(email);
+//   });
+
+//   document.getElementById('ecm-skip').addEventListener('click', () => {
+//     modal.remove();
+//     onSkip();
+//   });
+
+//   document.getElementById('ecm-email')?.addEventListener('keydown', e => {
+//     if (e.key === 'Enter') document.getElementById('ecm-submit').click();
+//     if (e.key === 'Escape') { modal.remove(); }
+//   });
+
+//   modal.querySelector('.ecm-backdrop').addEventListener('click', () => {
+//     modal.remove();
+//   });
+// }
+
 function showEmailCapture(onSubmit, onSkip) {
   document.getElementById('email-capture-modal')?.remove();
 
@@ -100,8 +150,21 @@ function showEmailCapture(onSubmit, onSkip) {
       <div class="ecm-sub">Drop your email or WhatsApp number to get the result sent to you — or skip and just see it here.</div>
       <input class="ecm-input" id="ecm-email" type="text" inputmode="email"
         placeholder="📧 email or 📱 +39 328 9741517" autocomplete="email">
+
+      <!-- Honeypot: hidden from real users, real bots auto-fill it -->
+      <div class="ecm-honeypot" aria-hidden="true">
+        <label for="ecm-website">Website</label>
+        <input type="text" id="ecm-website" name="website" tabindex="-1" autocomplete="off">
+      </div>
+
+      <label class="ecm-consent">
+        <input type="checkbox" id="ecm-consent">
+        <span>I agree TaalumaFlow can email me this result. No spam, unsubscribe anytime.</span>
+      </label>
+      <div class="ecm-consent-error" id="ecm-consent-error" style="display:none">Please check the box above to continue.</div>
+
       <div class="ecm-actions">
-        <button class="ecm-btn-primary" id="ecm-submit">
+        <button class="ecm-btn-primary" id="ecm-submit" disabled>
           Extract &amp; send me the result →
         </button>
         <button class="ecm-btn-skip" id="ecm-skip">
@@ -114,7 +177,30 @@ function showEmailCapture(onSubmit, onSkip) {
 
   setTimeout(() => document.getElementById('ecm-email')?.focus(), 100);
 
+  const consentBox = document.getElementById('ecm-consent');
+  const submitBtn  = document.getElementById('ecm-submit');
+  const errorEl    = document.getElementById('ecm-consent-error');
+
+  consentBox.addEventListener('change', () => {
+    submitBtn.disabled = !consentBox.checked;
+    if (consentBox.checked) errorEl.style.display = 'none';
+  });
+
   document.getElementById('ecm-submit').addEventListener('click', () => {
+    if (!consentBox.checked) {
+      errorEl.style.display = 'block';
+      return;
+    }
+
+    const honeypot = document.getElementById('ecm-website')?.value.trim();
+    if (honeypot) {
+      // Bot filled the hidden field — silently treat as a normal skip,
+      // no error shown, so we don't tip off the bot to route around it.
+      modal.remove();
+      onSkip();
+      return;
+    }
+
     const email = document.getElementById('ecm-email')?.value.trim();
     modal.remove();
     onSubmit(email);
@@ -127,13 +213,11 @@ function showEmailCapture(onSubmit, onSkip) {
 
   document.getElementById('ecm-email')?.addEventListener('keydown', e => {
     if (e.key === 'Enter') document.getElementById('ecm-submit').click();
-    if (e.key === 'Escape') { modal.remove(); /* just close, no action */ }
+    if (e.key === 'Escape') { modal.remove(); }
   });
 
-  // Backdrop click — just close, do NOT extract
   modal.querySelector('.ecm-backdrop').addEventListener('click', () => {
     modal.remove();
-    // Reset so next click shows modal again
   });
 }
 
@@ -171,11 +255,9 @@ async function runExtraction(textarea, runBtn, resultEl, emptyEl, loadingEl, aut
     if (loadingEl) loadingEl.style.display = 'none';
     renderResult(data, resultEl);
 
-    // Auto-send email if user provided one in the modal
     if (autoEmail && autoEmail !== 'skipped') {
       const sendInput = document.getElementById('demo-send-email');
       if (sendInput) sendInput.value = autoEmail;
-      // Send via backend
       sendExtractionEmail(autoEmail, data);
     }
 
@@ -190,13 +272,7 @@ async function runExtraction(textarea, runBtn, resultEl, emptyEl, loadingEl, aut
 
 async function sendExtractionEmail(email, data) {
   try {
-    const { BACKEND_URL, IS_BACKEND_CONFIGURED } = await import('./config.js');
     if (!IS_BACKEND_CONFIGURED) return;
-
-    const items    = data.items || [];
-    const subtotal = items.reduce((s, i) => s + (i.qty * i.unit_price), 0);
-    const vat      = subtotal * 0.22;
-    const total    = subtotal + vat;
 
     const res = await fetch(`${BACKEND_URL}/api/public/send-result/`, {
       method: 'POST',
@@ -205,7 +281,6 @@ async function sendExtractionEmail(email, data) {
     });
 
     if (res.ok) {
-      // Show subtle confirmation
       const note = document.createElement('div');
       note.style.cssText = 'text-align:center;font-size:11px;color:var(--green);margin-top:8px';
       note.textContent = `✓ Result sent to ${email}`;
@@ -251,17 +326,17 @@ function renderResult(data, container) {
 
       ${missing.length ? `
         <div class="demo-missing">
-          ⚠ Would go to review queue — missing: ${missing.join(', ')}
+          ⚠ Would go to review queue — missing: ${missing.map(escapeHtml).join(', ')}
         </div>` : ''}
 
       <div class="demo-customer">
         <div class="demo-avatar">
-          ${(data.client_name||'?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase()}
+          ${escapeHtml((data.client_name||'?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase())}
         </div>
         <div>
-          <div class="demo-cname">${data.client_name || '<span style="color:var(--text3)">Unknown</span>'}</div>
-          <div class="demo-caddr">${data.client_address || '<span style="color:var(--text3)">No address</span>'}</div>
-          ${data.client_email ? `<div class="demo-caddr">${data.client_email}</div>` : ''}
+          <div class="demo-cname">${data.client_name ? escapeHtml(data.client_name) : '<span style="color:var(--text3)">Unknown</span>'}</div>
+          <div class="demo-caddr">${data.client_address ? escapeHtml(data.client_address) : '<span style="color:var(--text3)">No address</span>'}</div>
+          ${data.client_email ? `<div class="demo-caddr">${escapeHtml(data.client_email)}</div>` : ''}
         </div>
       </div>
 
@@ -273,7 +348,7 @@ function renderResult(data, container) {
           ${items.length
             ? items.map(i => `
                 <tr>
-                  <td>${i.description}</td>
+                  <td>${escapeHtml(i.description)}</td>
                   <td>${i.qty}</td>
                   <td>€ ${(+i.unit_price).toFixed(2)}</td>
                   <td style="text-align:right;font-weight:600">
@@ -360,7 +435,6 @@ function renderResult(data, container) {
         `✅ *Totale:* €${(subtotal*1.22).toFixed(2)}\n\n` +
         `_Generato da TaalumaFlow · talumaflow.com_`;
 
-      // Mobile: use Web Share API (opens native share sheet including WhatsApp)
       if (navigator.share && /Mobi|Android|iPhone/i.test(navigator.userAgent)) {
         navigator.share({ text: message })
           .then(() => {
@@ -368,11 +442,9 @@ function renderResult(data, container) {
             status.textContent = '✓ Shared successfully';
           })
           .catch(() => {
-            // User cancelled — no error shown
             status.textContent = '';
           });
       } else {
-        // Desktop: copy to clipboard
         navigator.clipboard.writeText(message).then(() => {
           btn.textContent = '✓ Copied';
           btn.style.background = 'var(--green)';
@@ -384,7 +456,6 @@ function renderResult(data, container) {
             status.textContent = '';
           }, 4000);
         }).catch(() => {
-          // Clipboard failed — fallback to wa.me
           window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank', 'noopener');
           status.style.color = 'var(--green)';
           status.textContent = '✓ WhatsApp opened';
@@ -393,17 +464,13 @@ function renderResult(data, container) {
       return;
     }
 
-    // Send via backend email (with PDF attachment via base64)
     btn.disabled = true;
     btn.textContent = '⏳ Sending…';
     status.textContent = '';
 
     try {
-      const { BACKEND_URL, IS_BACKEND_CONFIGURED } = await import('./config.js');
-
       if (!IS_BACKEND_CONFIGURED) throw new Error('no_backend');
 
-      // Send via backend - backend generates the PDF
       const res = await fetch(`${BACKEND_URL}/api/public/send-result/`, {
         method : 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -427,7 +494,17 @@ function renderResult(data, container) {
         throw new Error(`${res.status}`);
       }
     } catch (err) {
-      // Fallback to mailto
+      const isExpired = err.message === '400';
+
+      if (isExpired) {
+        btn.disabled = false;
+        btn.textContent = '📤 Send';
+        status.style.color   = 'var(--red,#ef4444)';
+        status.textContent   = 'This result has expired — please re-run the extraction and try again.';
+        return;
+      }
+
+      // Genuine network/server failure — fall back to mailto
       const items    = (data.items||[]).map(i => `• ${i.qty}x ${i.description} @ €${(+i.unit_price).toFixed(2)}`).join('\n');
       const subtotal = (data.items||[]).reduce((s,i)=>s+(i.qty*i.unit_price),0);
       const subject  = encodeURIComponent('Your order extraction — TaalumaFlow');
@@ -452,7 +529,7 @@ function renderError(err, resultEl, emptyEl) {
        and we'll run it against your actual order messages.<br><br>
        📱 <a href="https://wa.me/393289741517" style="color:var(--blue)">+39 328 9741517</a>`
     : `<strong>Extraction failed</strong><br>
-       ${err.message}<br><br>
+       ${escapeHtml(err.message)}<br><br>
        The AI model may be starting up — try again in 10 seconds.`;
 
   if (emptyEl) {
@@ -461,6 +538,123 @@ function renderError(err, resultEl, emptyEl) {
       <div style="font-size:13px;color:var(--text2);text-align:center;line-height:1.6">${msg}</div>`;
   }
 }
+
+// ── Extraction demo's own PDF (real fattura, not a teaser) ─────
+function buildPDFHtml(data) {
+  const items    = data.items || [];
+  const subtotal = items.reduce((s, i) => s + (i.qty * i.unit_price), 0);
+  const vat      = subtotal * 0.22;
+  const total    = subtotal + vat;
+  const docNum   = `PRV-${Date.now().toString(36).toUpperCase().slice(-8)}`;
+  const date     = new Date().toLocaleDateString('it-IT');
+
+  return `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>${docNum}</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: 'Helvetica Neue', Arial, sans-serif; font-size:13px; color:#1a1a2e; padding:40px; }
+  .header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:40px; padding-bottom:24px; border-bottom:2px solid #4F8EF7; }
+  .brand { font-size:24px; font-weight:700; color:#2563EB; letter-spacing:-0.03em; }
+  .brand span { color:#9B5DE5; }
+  .doc-info { text-align:right; }
+  .doc-num { font-size:18px; font-weight:700; color:#1a1a2e; }
+  .doc-date { font-size:12px; color:#666; margin-top:4px; }
+  .doc-type { display:inline-block; padding:3px 12px; background:#EBF0FF; color:#2563EB; border-radius:99px; font-size:11px; font-weight:600; margin-top:6px; }
+  .section { margin-bottom:28px; }
+  .section-label { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:#888; margin-bottom:8px; }
+  .customer-name { font-size:15px; font-weight:600; color:#1a1a2e; }
+  .customer-addr { font-size:12px; color:#555; margin-top:3px; }
+  table { width:100%; border-collapse:collapse; margin-bottom:20px; }
+  thead tr { background:#f8f9ff; }
+  th { text-align:left; padding:10px 12px; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#666; border-bottom:2px solid #e8ecff; }
+  td { padding:10px 12px; border-bottom:1px solid #f0f2ff; font-size:13px; }
+  tr:last-child td { border-bottom:none; }
+  .text-right { text-align:right; }
+  .font-bold { font-weight:600; }
+  .totals { margin-left:auto; width:240px; }
+  .total-row { display:flex; justify-content:space-between; padding:6px 0; font-size:13px; }
+  .total-row.grand { border-top:2px solid #4F8EF7; margin-top:4px; padding-top:10px; font-size:16px; font-weight:700; color:#2563EB; }
+  .conf-badge { display:inline-block; padding:4px 14px; border-radius:99px; font-size:11px; font-weight:700; background:#d1fae5; color:#065f46; }
+  .footer { margin-top:48px; padding-top:16px; border-top:1px solid #e8ecff; font-size:10px; color:#999; display:flex; justify-content:space-between; }
+</style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <div class="brand">Taluma<span>Flow</span></div>
+      <div style="font-size:10px;color:#aaa;margin-top:4px">AI Order Extraction Demo</div>
+    </div>
+    <div class="doc-info">
+      <div class="doc-num">${docNum}</div>
+      <div class="doc-date">${date}</div>
+      <div class="doc-type">PREVENTIVO / FATTURA</div>
+    </div>
+  </div>
+  <div class="section">
+    <div class="section-label">Customer</div>
+    <div class="customer-name">${escapeHtml(data.client_name) || 'Unknown Customer'}</div>
+    <div class="customer-addr">${escapeHtml(data.client_address) || ''}</div>
+    ${data.client_email ? `<div class="customer-addr">${escapeHtml(data.client_email)}</div>` : ''}
+  </div>
+  <div class="section">
+    <div class="section-label">Order items</div>
+    <table>
+      <thead><tr>
+        <th>Description</th>
+        <th class="text-right">Qty</th>
+        <th class="text-right">Unit Price</th>
+        <th class="text-right">Total</th>
+      </tr></thead>
+      <tbody>
+        ${items.map(i => `
+          <tr>
+            <td>${escapeHtml(i.description)}</td>
+            <td class="text-right">${i.qty}</td>
+            <td class="text-right">€ ${(+i.unit_price).toFixed(2)}</td>
+            <td class="text-right font-bold">€ ${(i.qty * i.unit_price).toFixed(2)}</td>
+          </tr>`).join('')}
+      </tbody>
+    </table>
+    <div class="totals">
+      <div class="total-row"><span>Subtotal</span><span>€ ${subtotal.toFixed(2)}</span></div>
+      <div class="total-row"><span>VAT 22%</span><span>€ ${vat.toFixed(2)}</span></div>
+      <div class="total-row grand"><span>Total</span><span>€ ${total.toFixed(2)}</span></div>
+    </div>
+  </div>
+  <div>
+    <span class="conf-badge">✓ AI Confidence: ${Math.round((data.confidence||0)*100)}%</span>
+  </div>
+  <div class="footer">
+    <span>Generated by TaalumaFlow · talumaflow.com</span>
+    <span>Payment due within 30 days</span>
+  </div>
+</body>
+</html>`;
+}
+
+function generateAndDownloadPDF(data) {
+  const html = buildPDFHtml(data);
+  const w = window.open('', '_blank');
+  if (!w) return;
+  w.document.write(html);
+  w.document.close();
+  w.focus();
+
+  w.onafterprint = () => w.close();
+
+  setTimeout(() => {
+    w.print();
+    setTimeout(() => { if (!w.closed) w.close(); }, 1000);
+  }, 500);
+}
+
+// ═══════════════════════════════════════════════════════════
+// CSV DASHBOARD (demo — protected per dashboard_strategy.md)
+// ═══════════════════════════════════════════════════════════
+
 const MAX_DEMO_ROWS = 100;
 const MAX_DEMO_MONTHS = 3;
 
@@ -536,27 +730,27 @@ function detectColumns(keys) {
   };
 }
 
-// ── Column mapping fallback ─────────────────────────────────
 function renderColumnMapper(rows, keys, dashEl, dropzone) {
+  const opts = keys.map(k => `<option value="${escapeHtml(k)}">${escapeHtml(k)}</option>`).join('');
   dashEl.innerHTML = `
     <div class="csv-mapper">
       <div class="csv-mapper-title">We couldn't auto-detect your value column</div>
       <div class="csv-mapper-sub">Tell us which columns to use and we'll build the dashboard from your file.</div>
       <div class="csv-mapper-row">
         <label>Value column (revenue or qty) *</label>
-        <select id="map-num">${keys.map(k=>`<option value="${k}">${k}</option>`).join('')}</select>
+        <select id="map-num">${opts}</select>
       </div>
       <div class="csv-mapper-row">
         <label>Category column (optional)</label>
-        <select id="map-cat"><option value="">— none —</option>${keys.map(k=>`<option value="${k}">${k}</option>`).join('')}</select>
+        <select id="map-cat"><option value="">— none —</option>${opts}</select>
       </div>
       <div class="csv-mapper-row">
         <label>Date column (optional)</label>
-        <select id="map-date"><option value="">— none —</option>${keys.map(k=>`<option value="${k}">${k}</option>`).join('')}</select>
+        <select id="map-date"><option value="">— none —</option>${opts}</select>
       </div>
       <div class="csv-mapper-row">
         <label>Product column (optional)</label>
-        <select id="map-prod"><option value="">— none —</option>${keys.map(k=>`<option value="${k}">${k}</option>`).join('')}</select>
+        <select id="map-prod"><option value="">— none —</option>${opts}</select>
       </div>
       <button class="csv-sample-btn" id="map-run" style="margin-top:8px">Build dashboard →</button>
     </div>`;
@@ -595,7 +789,6 @@ function renderDashboard(allRows, dashEl, dropzone, manualCols = null) {
 
   const { numKey, catKey, dateKey, prodKey, customerKey } = cols;
 
-  // ── Demo limits ──────────────────────────────────────────
   let rows = allRows;
   let originalMonths = null;
   if (dateKey) {
@@ -612,7 +805,6 @@ function renderDashboard(allRows, dashEl, dropzone, manualCols = null) {
     rows = rows.slice(0, MAX_DEMO_ROWS);
   }
 
-  // ── Aggregate ────────────────────────────────────────────
   const byCategory = {}, byDate = {}, byProduct = {}, byCustomer = {}, byProductByMonth = {};
   let grand = 0, count = 0;
 
@@ -646,13 +838,11 @@ function renderDashboard(allRows, dashEl, dropzone, manualCols = null) {
     if (prev > 0) growthPct = Math.round((last-prev)/prev*100);
   }
 
-  // ── Anomaly detection (category bars, >2 std dev) ───────
   const catVals = topCats.map(([,v])=>v);
   const catMean = catVals.reduce((a,b)=>a+b,0) / (catVals.length || 1);
   const catStd  = Math.sqrt(catVals.reduce((s,v)=>s+(v-catMean)**2,0) / (catVals.length || 1));
   const anomalyCats = new Set(topCats.filter(([,v]) => catStd>0 && Math.abs(v-catMean) > 2*catStd).map(([c])=>c));
 
-  // ── Forecast: simple linear regression, 2 months ahead ──
   let forecastPoints = [];
   if (dateVals.length >= 3) {
     const n = dateVals.length;
@@ -665,7 +855,6 @@ function renderDashboard(allRows, dashEl, dropzone, manualCols = null) {
     forecastPoints = [n, n+1].map(x => Math.max(0, slope*x+intercept));
   }
 
-  // ── Customer concentration risk ─────────────────────────
   let customerRisk = null;
   if (customerKey && Object.keys(byCustomer).length) {
     const topCustomers = Object.entries(byCustomer).sort((a,b)=>b[1]-a[1]).slice(0,3);
@@ -674,7 +863,6 @@ function renderDashboard(allRows, dashEl, dropzone, manualCols = null) {
     customerRisk = { topCustomers, pct };
   }
 
-  // ── Slow movers (declining month-over-month) ────────────
   let slowMovers = [];
   if (dates.length >= 2) {
     const lastM = dates[dates.length-1], prevM = dates[dates.length-2];
@@ -687,7 +875,6 @@ function renderDashboard(allRows, dashEl, dropzone, manualCols = null) {
     slowMovers.sort((a,b)=>a.pct-b.pct);
   }
 
-  // ── Render ───────────────────────────────────────────────
   dashEl.innerHTML = `
     ${(originalRowCount || originalMonths) ? renderLimitBanner(originalRowCount, originalMonths) : ''}
     <div class="csv-dash-header">
@@ -699,11 +886,11 @@ function renderDashboard(allRows, dashEl, dropzone, manualCols = null) {
     </div>
     <div class="csv-charts-grid">
       <div class="csv-chart-card">
-        <div class="csv-chart-title">Revenue by ${catKey || 'category'}</div>
+        <div class="csv-chart-title">Revenue by ${escapeHtml(catKey) || 'category'}</div>
         <div class="csv-bar-chart">
           ${topCats.map(([cat, val]) => `
             <div class="csv-bar-row">
-              <div class="csv-bar-label" title="${cat}">${cat.length>22?cat.slice(0,20)+'…':cat}${anomalyCats.has(cat)?' ⚠':''}</div>
+              <div class="csv-bar-label" title="${escapeHtml(cat)}">${escapeHtml(cat.length>22?cat.slice(0,20)+'…':cat)}${anomalyCats.has(cat)?' ⚠':''}</div>
               <div class="csv-bar-track"><div class="csv-bar-fill ${anomalyCats.has(cat)?'csv-bar-fill-anomaly':''}" style="width:${(val/maxCat*100).toFixed(1)}%"></div></div>
               <div class="csv-bar-val">€${val.toFixed(0)}</div>
             </div>`).join('')}
@@ -731,7 +918,7 @@ function renderDashboard(allRows, dashEl, dropzone, manualCols = null) {
           <tbody>
             ${topProducts.slice(0,8).map(([name, val]) => `
               <tr>
-                <td>${name.length>30?name.slice(0,28)+'…':name}</td>
+                <td>${escapeHtml(name.length>30?name.slice(0,28)+'…':name)}</td>
                 <td>€ ${val.toLocaleString('it-IT',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
                 <td>
                   <div class="csv-share-bar">
@@ -753,7 +940,7 @@ function renderDashboard(allRows, dashEl, dropzone, manualCols = null) {
             <div class="csv-bar-chart">
               ${customerRisk.topCustomers.map(([c,v])=>`
                 <div class="csv-bar-row">
-                  <div class="csv-bar-label">${c}</div>
+                  <div class="csv-bar-label">${escapeHtml(c)}</div>
                   <div class="csv-bar-track"><div class="csv-bar-fill" style="width:${(v/customerRisk.topCustomers[0][1]*100).toFixed(1)}%"></div></div>
                   <div class="csv-bar-val">€${v.toFixed(0)}</div>
                 </div>`).join('')}
@@ -774,7 +961,7 @@ function renderDashboard(allRows, dashEl, dropzone, manualCols = null) {
           <tbody>
             ${slowMovers.slice(0,6).map(s => `
               <tr>
-                <td>${s.product}</td>
+                <td>${escapeHtml(s.product)}</td>
                 <td>€${s.prev.toFixed(0)}</td>
                 <td>€${s.last.toFixed(0)}</td>
                 <td style="color:#f59e0b;font-weight:600">${s.pct}%</td>
