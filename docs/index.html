@@ -39,6 +39,18 @@
     <a href="#contact" class="nav-cta">Get a demo</a>
     <button class="nav-hamburger" id="mnob" aria-label="Open menu">☰</button>
   </div>
+
+  <button class="changelog-btn" id="changelog-btn" aria-label="What's new" aria-expanded="false">
+  🔔
+  <span class="changelog-badge" id="changelog-badge" style="display:none">0</span>
+</button>
+<div class="changelog-panel" id="changelog-panel" role="dialog" aria-label="What's new">
+  <div class="changelog-header">
+    <div class="changelog-title">What's new</div>
+    <button class="changelog-close" id="changelog-close" aria-label="Close">✕</button>
+  </div>
+  <div class="changelog-list" id="changelog-list"></div>
+</div>
 </nav>
 
 <div class="mobile-nav-overlay" id="mno" aria-hidden="true"></div>
