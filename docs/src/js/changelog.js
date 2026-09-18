@@ -2,6 +2,13 @@
 // that's the only maintenance this feature needs.
 const CHANGELOG = [
   {
+    id: 'price-sensitivity-classifier',
+    date: '2026-09-18',
+    tag: 'new',
+    title: 'Price Sensitivity & Document Classifier added to Data Lab',
+    desc: 'Two new tools: see which products are safe to reprice, and auto-route customer messages by category.',
+  },
+  {
     id: 'churn-forecast-inventory-pdf',
     date: '2026-09-18',
     tag: 'new',
