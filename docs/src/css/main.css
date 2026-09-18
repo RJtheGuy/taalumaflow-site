@@ -1252,3 +1252,77 @@ button, a, .btn-primary, .btn-secondary,
   background: var(--surface2); border-radius: 10px;
   font-size: 11px; color: var(--text3); line-height: 1.6;
 }
+
+/* Classifier: text input mode */
+.aw-text-input-area { display: flex; flex-direction: column; gap: 14px; }
+
+.aw-text-input-hdr {
+  display: flex; justify-content: space-between; align-items: center;
+  flex-wrap: wrap; gap: 8px;
+}
+.aw-text-input-hdr label {
+  font-size: 11px; font-weight: 700; color: var(--text3);
+  text-transform: uppercase; letter-spacing: .08em;
+}
+.aw-example-label {
+  font-size: 11px; color: var(--text3);
+  padding: 3px 10px; border-radius: 99px;
+  background: var(--surface2); border: 1px solid var(--border);
+}
+
+.aw-textarea {
+  width: 100%; min-height: 160px; resize: vertical;
+  background: var(--bg); border: 1.5px solid var(--border2);
+  border-radius: 12px; padding: 16px;
+  font-size: 14px; font-family: 'Inter', sans-serif;
+  color: var(--text); line-height: 1.6;
+  outline: none; transition: border-color .2s, background var(--tr);
+}
+.aw-textarea:focus { border-color: var(--blue); }
+.aw-textarea::placeholder { color: var(--text3); }
+
+.aw-text-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+.aw-classify-btn {
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 26px; border-radius: 10px;
+  background: linear-gradient(135deg, var(--blue2), var(--blue));
+  color: #fff; font-size: 14px; font-weight: 600;
+  border: none; cursor: pointer; letter-spacing: .02em;
+  box-shadow: 0 0 30px rgba(79,142,247,.25);
+  transition: transform .2s, box-shadow .2s, opacity .2s;
+}
+.aw-classify-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 40px rgba(79,142,247,.4); }
+.aw-classify-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+.aw-cycle-btn {
+  padding: 11px 20px; border-radius: 10px;
+  background: var(--surface2); border: 1.5px solid var(--border);
+  color: var(--text2); font-size: 13px; font-weight: 500;
+  cursor: pointer; transition: all .2s;
+}
+.aw-cycle-btn:hover { border-color: var(--border2); color: var(--text); }
+
+/* Classifier: result display */
+.aw-classify-result {
+  margin-top: 20px; padding: 28px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 16px;
+}
+.aw-cat-badge {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 10px 20px; border-radius: 99px;
+  border: 1.5px solid; font-size: 15px; font-weight: 700;
+}
+.aw-cat-reasoning {
+  margin-top: 16px; padding: 12px 16px;
+  background: var(--bg3); border-radius: 10px;
+  font-size: 13px; font-style: italic;
+  color: var(--text2); line-height: 1.5;
+}
+
+@media (max-width: 640px) {
+  .aw-text-actions { flex-direction: column; align-items: stretch; }
+  .aw-classify-btn, .aw-cycle-btn { width: 100%; justify-content: center; }
+  .aw-textarea { min-height: 140px; }
+}
