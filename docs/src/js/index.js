@@ -7,6 +7,7 @@ import { initNavScroll, initMobileNav, initScrollReveal,
 import { initExtractionDemo, initCSVDashboard }            from './demo.js';
 import { initAnalyticsWidget } from './analytics.js';
 import { initChangelog } from './changelog.js';
+import { initErpCapture } from './erp-capture.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   initTheme();
@@ -32,6 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initCSVDashboard();
   initAnalyticsWidget();
   initChangelog();
+  initErpCapture();
   
   initInlineChat({
     inputId:    'chat-input',

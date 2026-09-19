@@ -1326,3 +1326,30 @@ button, a, .btn-primary, .btn-secondary,
   .aw-classify-btn, .aw-cycle-btn { width: 100%; justify-content: center; }
   .aw-textarea { min-height: 140px; }
 }
+
+.pc-erp-capture {
+  margin-top: 16px; padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+.pc-erp-capture-label {
+  font-size: 11px; color: var(--text3); margin-bottom: 8px;
+}
+.pc-erp-form { display: flex; gap: 8px; }
+.pc-erp-input {
+  flex: 1; min-width: 0;
+  padding: 8px 12px; border-radius: 8px;
+  background: var(--surface2); border: 1px solid var(--border);
+  color: var(--text); font-size: 12px;
+  outline: none; transition: border-color .2s;
+}
+.pc-erp-input:focus { border-color: var(--blue); }
+.pc-erp-input:disabled { opacity: .6; }
+.pc-erp-btn {
+  padding: 8px 14px; border-radius: 8px;
+  background: var(--surface2); border: 1.5px solid var(--border);
+  color: var(--text2); font-size: 12px; font-weight: 600;
+  cursor: pointer; white-space: nowrap; transition: all .2s;
+}
+.pc-erp-btn:hover { border-color: var(--border2); color: var(--blue); }
+.pc-erp-btn:disabled { opacity: .6; cursor: not-allowed; }
+.pc-erp-status { font-size: 11px; margin-top: 6px; min-height: 14px; }
