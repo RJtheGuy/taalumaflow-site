@@ -13,6 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="src/css/main.css">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 </head>
 <body>
 
@@ -21,7 +22,23 @@
 <!-- NAV -->
 <nav id="nav">
   <a href="#" class="nav-logo" aria-label="TaalumaFlow home">
-    <div class="nav-logo-mark" aria-hidden="true">TF</div>
+     <div class="nav-logo-mark" aria-hidden="true">
+  <svg viewBox="0 0 34 34" width="34" height="34">
+    <defs>
+      <linearGradient id="navLogoGradA" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" style="stop-color:var(--blue2)" />
+        <stop offset="100%" style="stop-color:var(--blue)" />
+      </linearGradient>
+      <linearGradient id="navLogoGradB" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" style="stop-color:var(--purple)" />
+        <stop offset="100%" style="stop-color:var(--blue)" />
+      </linearGradient>
+    </defs>
+    <rect x="5" y="11" width="24" height="6" rx="3" fill="url(#navLogoGradA)"/>
+    <rect x="14" y="11" width="6" height="18" rx="3" fill="url(#navLogoGradB)"/>
+    <circle cx="17" cy="30.5" r="2.6" fill="var(--cyan)"/>
+  </svg>
+</div>
     <div class="nav-wordmark">Taluma<span>Flow</span></div>
   </a>
   <div class="nav-center">
@@ -80,6 +97,16 @@
     <div class="hm"><div class="hm-num"><span id="cnt-2">0</span>%</div><div class="hm-lbl">Extraction accuracy</div></div>
     <div class="hm"><div class="hm-num"><span id="cnt-3">0</span>+</div><div class="hm-lbl">Integrations supported</div></div>
     <div class="hm"><div class="hm-num">On<span class="hm-sub">-prem</span></div><div class="hm-lbl">Data stays with you</div></div>
+  </div>
+  <div class="hero-integrations rv d4">
+  <span class="hi-label">Works with</span>
+  <span class="hi-chip">WhatsApp</span>
+  <span class="hi-chip">Slack</span>
+  <span class="hi-chip">QuickBooks</span>
+  <span class="hi-chip">Gmail</span>
+</div>
+  <div class="hero-metrics-note rv d4">
+    Based on internal benchmark, 40+ processed orders · <a href="#process">see our process</a>
   </div>
 </section>
 

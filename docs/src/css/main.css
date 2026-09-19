@@ -79,13 +79,19 @@ body {
 [data-theme="light"] #nav.scrolled { background: rgba(244,247,255,0.92); }
 
 .nav-logo { display: flex; align-items: center; gap: 11px; text-decoration: none; }
-.nav-logo-mark {
+/* .nav-logo-mark {
   width: 34px; height: 34px; border-radius: 9px;
   background: linear-gradient(135deg, var(--blue2), var(--purple));
   display: flex; align-items: center; justify-content: center;
   font-family: 'Space Grotesk', sans-serif;
   font-size: 13px; font-weight: 800; color: #fff; letter-spacing: -0.03em;
+} */
+.nav-logo-mark {
+  width: 34px; height: 34px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
 }
+.nav-logo-mark svg { display: block; width: 100%; height: 100%; }
 .nav-wordmark {
   font-family: 'Space Grotesk', sans-serif;
   font-size: 16px; font-weight: 700; color: var(--text);
@@ -202,19 +208,21 @@ body {
   transition: transform 0.2s, box-shadow 0.2s;
 }
 .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 50px rgba(79,142,247,0.45); }
-.btn-outline {
-  padding: 13px 28px; border-radius: 10px;
-  background: var(--surface2); border: 1.5px solid var(--border);
-  color: var(--text); font-size: 14px; font-weight: 500;
-  text-decoration: none; transition: all 0.2s;
-}
-.btn-outline:hover { border-color: var(--border2); color: var(--blue); }
+
 
 .hero-metrics {
   display: flex; align-items: center;
   border: 1px solid var(--border); border-radius: 16px;
   background: var(--surface); backdrop-filter: blur(20px); overflow: hidden;
 }
+.hero-metrics-note {
+  margin-top: 12px;
+  font-size: 11px;
+  color: var(--text3);
+  text-align: center;
+}
+.hero-metrics-note a { color: var(--blue); text-decoration: none; }
+.hero-metrics-note a:hover { text-decoration: underline; }
 .hm { padding: 18px 32px; text-align: center; border-right: 1px solid var(--border); }
 .hm:last-child { border-right: none; }
 .hm-num {
@@ -1002,6 +1010,14 @@ button, a, .btn-primary, .btn-secondary,
   margin-bottom: 14px; line-height: 1.5;
 }
 
+.btn-outline {
+  padding: 13px 28px; border-radius: 10px;
+  background: transparent; border: none;
+  color: var(--text2); font-size: 14px; font-weight: 500;
+  text-decoration: none; transition: all 0.2s;
+}
+.btn-outline:hover { color: var(--blue); }
+
 .aw-error {
   margin-top: 20px; padding: 20px;
   background: rgba(239,68,68,.06);
@@ -1353,3 +1369,17 @@ button, a, .btn-primary, .btn-secondary,
 .pc-erp-btn:hover { border-color: var(--border2); color: var(--blue); }
 .pc-erp-btn:disabled { opacity: .6; cursor: not-allowed; }
 .pc-erp-status { font-size: 11px; margin-top: 6px; min-height: 14px; }
+
+.hero-integrations {
+  display: flex; align-items: center; justify-content: center;
+  gap: 8px; margin-top: 16px; flex-wrap: wrap;
+}
+.hi-label {
+  font-size: 10px; color: var(--text3);
+  text-transform: uppercase; letter-spacing: 0.08em; margin-right: 4px;
+}
+.hi-chip {
+  font-size: 11px; font-weight: 600; color: var(--text2);
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 99px; padding: 4px 12px;
+}
