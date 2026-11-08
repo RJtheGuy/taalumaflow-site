@@ -48,3 +48,13 @@ The backend lives in a separate repository, TaalumaOS, and is served at https://
 ## Deploying
 
 Push to `main`; GitHub Pages serves `docs/` at talumaflow.com.
+
+## Releasing
+
+GitHub Pages caches CSS and JS for hours, so every local stylesheet, script tag and JS import carries a `?v=<hash>` query. Run
+
+```
+python scripts/bump_asset_version.py
+```
+
+before committing any CSS or JS change. It recomputes the version from `docs/src/` and rewrites it in the HTML pages and in the imports between modules, so the HTML always carries the version that matches the files. Commit the result together with the change.

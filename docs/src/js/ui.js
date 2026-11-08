@@ -80,7 +80,7 @@ export function initContactForm(formId = 'contact-form', btnId = 'fbtn') {
 
     // Try backend /api/public/contact/
     try {
-      const { IS_BACKEND_CONFIGURED, BACKEND_URL } = await import('./config.js');
+      const { IS_BACKEND_CONFIGURED, BACKEND_URL } = await import('./config.js?v=24af8bd8');
       if (IS_BACKEND_CONFIGURED && BACKEND_URL) {
         const res = await fetch(`${BACKEND_URL}/api/public/contact/`, {
           method: 'POST',

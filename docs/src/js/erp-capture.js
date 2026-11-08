@@ -1,4 +1,4 @@
-import { BACKEND_URL, IS_BACKEND_CONFIGURED } from './config.js';
+import { BACKEND_URL, IS_BACKEND_CONFIGURED } from './config.js?v=24af8bd8';
 
 export function initErpCapture() {
   const form   = document.getElementById('erp-capture-form');

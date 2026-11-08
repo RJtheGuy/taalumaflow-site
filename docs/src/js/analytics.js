@@ -1,5 +1,5 @@
-import { BACKEND_URL, IS_BACKEND_CONFIGURED } from './config.js';
-import { escapeHtml } from './sanitize.js';
+import { BACKEND_URL, IS_BACKEND_CONFIGURED } from './config.js?v=24af8bd8';
+import { escapeHtml } from './sanitize.js?v=24af8bd8';
 
 const TOOLS = {
   forecast: {

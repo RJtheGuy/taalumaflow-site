@@ -1,6 +1,6 @@
 
-import { PUBLIC_API, IS_BACKEND_CONFIGURED } from './config.js';
-import { initEngine, answer as engineAnswer, FALLBACK } from './chat-engine.js';
+import { PUBLIC_API, IS_BACKEND_CONFIGURED } from './config.js?v=24af8bd8';
+import { initEngine, answer as engineAnswer, FALLBACK } from './chat-engine.js?v=24af8bd8';
 
 const GREETINGS = new Set([
   'hi','hello','hey','ciao','salve','buongiorno','buonasera',

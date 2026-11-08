@@ -1,7 +1,7 @@
-import { initTheme, toggleTheme } from '/src/js/theme.js';
-import { initParticles } from '/src/js/particles.js';
-import { initNavScroll, initMobileNav } from '/src/js/ui.js';
-import { initChangelog } from '/src/js/changelog.js';
+import { initTheme, toggleTheme } from '/src/js/theme.js?v=24af8bd8';
+import { initParticles } from '/src/js/particles.js?v=24af8bd8';
+import { initNavScroll, initMobileNav } from '/src/js/ui.js?v=24af8bd8';
+import { initChangelog } from '/src/js/changelog.js?v=24af8bd8';
 
 window.toggleTheme = toggleTheme;
 

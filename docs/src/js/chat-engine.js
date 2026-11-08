@@ -1,5 +1,5 @@
 
-import { KB } from './rag-kb.js';
+import { KB } from './rag-kb.js?v=24af8bd8';
 
 const MODEL_ID  = 'Xenova/all-MiniLM-L6-v2';
 const THRESHOLD = 0.32; // lowered from 0.38 — MiniLM scores are compressed

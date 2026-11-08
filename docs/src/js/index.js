@@ -1,13 +1,13 @@
 
-import { initParticles }                                   from './particles.js';
-import { initTheme, toggleTheme }                          from './theme.js';
-import { initInlineChat, initFloatChat }                   from './chat.js';
+import { initParticles }                                   from './particles.js?v=24af8bd8';
+import { initTheme, toggleTheme }                          from './theme.js?v=24af8bd8';
+import { initInlineChat, initFloatChat }                   from './chat.js?v=24af8bd8';
 import { initNavScroll, initMobileNav, initScrollReveal,
-         initCounters, initChartPeriods, initContactForm } from './ui.js';
-import { initExtractionDemo, initCSVDashboard }            from './demo.js';
-import { initAnalyticsWidget } from './analytics.js';
-import { initChangelog } from './changelog.js';
-import { initErpCapture } from './erp-capture.js';
+         initCounters, initChartPeriods, initContactForm } from './ui.js?v=24af8bd8';
+import { initExtractionDemo, initCSVDashboard }            from './demo.js?v=24af8bd8';
+import { initAnalyticsWidget } from './analytics.js?v=24af8bd8';
+import { initChangelog } from './changelog.js?v=24af8bd8';
+import { initErpCapture } from './erp-capture.js?v=24af8bd8';
 
 document.addEventListener('DOMContentLoaded', () => {
   initTheme();

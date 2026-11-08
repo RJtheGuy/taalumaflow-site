@@ -1,4 +1,4 @@
-import { BACKEND_URL } from './config.js';
+import { BACKEND_URL } from './config.js?v=24af8bd8';
 
 try {
   const dnt = [navigator.doNotTrack, window.doNotTrack, navigator.msDoNotTrack];
