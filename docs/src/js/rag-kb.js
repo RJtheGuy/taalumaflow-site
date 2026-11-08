@@ -8,7 +8,7 @@ export const KB = [
     ],
     keywords: ['services', 'offer', 'solutions', 'products', 'what do you do',
                'what tools', 'tools', 'capabilities', 'cosa fate'],
-    answer: `TalumaFlow builds six AI products for businesses:\n\n**TalumaMail** — reads WhatsApp/email orders and generates invoices automatically\n**Custom AI Chatbots** — trained on your products, FAQs, and ordering process\n**Data Dashboards** — live analytics and forecasting from your existing data\n**TalumaERP** — lightweight ERP for small distributors\n**Process Automation** — document OCR, email routing, data entry\n**Custom AI Solutions** — NLP, forecasting, classification built by data scientists\n\nAll run on your own hardware. Which one is most relevant to your business?`,
+    answer: `TaalumaFlow builds six AI products for businesses:\n\n**TaalumaMail** — reads WhatsApp/email orders and generates invoices automatically\n**Custom AI Chatbots** — trained on your products, FAQs, and ordering process\n**Data Dashboards** — live analytics and forecasting from your existing data\n**TaalumaERP** — lightweight ERP for small distributors\n**Process Automation** — document OCR, email routing, data entry\n**Custom AI Solutions** — NLP, forecasting, classification built by data scientists\n\nAll run on your own hardware. Which one is most relevant to your business?`,
   },
   {
     questions: [
@@ -22,14 +22,14 @@ export const KB = [
   },
   {
     questions: [
-      'what is talumamail', 'how does order extraction work',
+      'what is taalumamail', 'how does order extraction work',
       'automatic invoice from whatsapp', 'whatsapp to invoice',
       'email order processing', 'fattura automatica', 'ordine automatico',
-      'how does talumamail work', 'order pipeline',
+      'how does taalumamail work', 'order pipeline',
     ],
-    keywords: ['talumamail', 'taalumamail', 'mail', 'order', 'ordine', 'whatsapp',
+    keywords: ['taalumamail', 'talumamail', 'mail', 'order', 'ordine', 'whatsapp',
                'fattura', 'invoice', 'preventivo', 'extraction', 'pdf'],
-    answer: `TalumaMail is our flagship product ✉️\n\nYour clients send orders by WhatsApp or email — in any format, even informal Italian. TalumaMail:\n\n• Reads the message and extracts every item, quantity, and price\n• Generates a Fattura or Preventivo PDF automatically\n• Sends it back to the client — zero manual input required\n• Runs entirely on your server — no data leaves your network\n• Connects to Odoo, SAP, or any ERP\n\nAverage time: message → invoice in under 10 seconds.`,
+    answer: `TaalumaMail is our flagship product ✉️\n\nYour clients send orders by WhatsApp or email — in any format, even informal Italian. TaalumaMail:\n\n• Reads the message and extracts every item, quantity, and price\n• Generates a Fattura or Preventivo PDF automatically\n• Sends it back to the client — zero manual input required\n• Runs entirely on your server — no data leaves your network\n• Connects to Odoo, SAP, or any ERP\n\nAverage time: message → invoice in under 10 seconds.`,
   },
   {
     questions: [
@@ -58,7 +58,7 @@ export const KB = [
     ],
     keywords: ['price', 'cost', 'pricing', 'quanto costa', 'budget',
                'how much', 'rates', 'fees'],
-    answer: `Pricing is scoped per project — we don't do generic quotes because the cost depends on your actual data and setup.\n\nTypical ranges:\n• TalumaMail deployment: from €2,000 one-time\n• Custom chatbot: from €1,500\n• Dashboard project: from €1,200\n• Custom AI solution: scoped per project\n\nThe best way to get a real number is a 30-minute call where we look at your setup.\n\n📧 talumaflow@gmail.com · 📱 +39 328 9741517`,
+    answer: `Pricing is scoped per project — we don't do generic quotes because the cost depends on your actual data and setup.\n\nTypical ranges:\n• TaalumaMail deployment: from €2,000 one-time\n• Custom chatbot: from €1,500\n• Dashboard project: from €1,200\n• Custom AI solution: scoped per project\n\nThe best way to get a real number is a 30-minute call where we look at your setup.\n\n📧 talumaflow@gmail.com · 📱 +39 328 9741517`,
   },
   {
     questions: [
@@ -87,7 +87,7 @@ export const KB = [
     ],
     keywords: ['who are you', 'about', 'talumaflow', 'team', 'founders',
                'data scientist', 'background', 'company'],
-    answer: `TalumaFlow is a small team of data scientists based in Milan.\n\nWe got frustrated watching AI demos that look impressive in presentations but fall apart when they meet real business data — messy spreadsheets, inconsistent WhatsApp messages, mixed Italian and English.\n\nSo we build tools that actually work in production:\n• Honest about what AI can and can't do\n• No 6-month enterprise integrations\n• If it won't help your specific problem, we say so before charging\n\nWhat problem are you trying to solve?`,
+    answer: `TaalumaFlow is a small team of data scientists based in Milan.\n\nWe got frustrated watching AI demos that look impressive in presentations but fall apart when they meet real business data — messy spreadsheets, inconsistent WhatsApp messages, mixed Italian and English.\n\nSo we build tools that actually work in production:\n• Honest about what AI can and can't do\n• No 6-month enterprise integrations\n• If it won't help your specific problem, we say so before charging\n\nWhat problem are you trying to solve?`,
   },
   {
     questions: [
@@ -109,10 +109,10 @@ export const KB = [
   },
   {
     questions: [
-      'talumaerp', 'lightweight erp', 'inventory management system',
+      'taalumaerp', 'lightweight erp', 'inventory management system',
       'erp for small business', 'gestionale', 'magazzino',
     ],
-    keywords: ['erp', 'talumaerp', 'taalumaerp', 'gestionale', 'inventory', 'stock', 'warehouse'],
-    answer: `TalumaERP is our lightweight ERP for small distributors 🏗\n\nBuilt for businesses that outgrew spreadsheets but don't need SAP's complexity or cost:\n\n• Inventory and stock management\n• Customer and order history\n• Pre-wired to TalumaMail — orders flow in automatically\n• Italian fiscal compliance built in\n\nCurrently in beta. Visit taalumaerp.com or contact us for early access.`,
+    keywords: ['erp', 'taalumaerp', 'talumaerp', 'gestionale', 'inventory', 'stock', 'warehouse'],
+    answer: `TaalumaERP is our lightweight ERP for small distributors 🏗\n\nBuilt for businesses that outgrew spreadsheets but don't need SAP's complexity or cost:\n\n• Inventory and stock management\n• Customer and order history\n• Pre-wired to TaalumaMail — orders flow in automatically\n• Italian fiscal compliance built in\n\nCurrently in beta. Visit taalumaerp.com or contact us for early access.`,
   },
 ];

@@ -9,9 +9,9 @@ const GREETINGS = new Set([
 ]);
 
 const GREETING_REPLIES = [
-  "Ciao! 👋 I'm the TalumaFlow assistant. Ask me anything about our products — order automation, AI chatbots, data dashboards, or anything else. How can I help?",
-  "Hello! 👋 Great to have you here. I can tell you about TalumaMail, our chatbot solutions, data dashboards, pricing, or how to get started. What are you curious about?",
-  "Hi there! 😊 I'm here to help you understand what TalumaFlow does. We build AI automation tools for businesses — want to know more about a specific product?",
+  "Ciao! 👋 I'm the TaalumaFlow assistant. Ask me anything about our products — order automation, AI chatbots, data dashboards, or anything else. How can I help?",
+  "Hello! 👋 Great to have you here. I can tell you about TaalumaMail, our chatbot solutions, data dashboards, pricing, or how to get started. What are you curious about?",
+  "Hi there! 😊 I'm here to help you understand what TaalumaFlow does. We build AI automation tools for businesses — want to know more about a specific product?",
 ];
 
 function isGreeting(text) {
@@ -80,15 +80,15 @@ const QUALIFY_Q = [
 function renderCTA(container, answers) {
   const [orders, channel, system] = answers;
   const subject = encodeURIComponent(
-    `TalumaFlow demo — ~${orders||'?'} orders/week via ${channel||'WhatsApp'}`
+    `TaalumaFlow demo — ~${orders||'?'} orders/week via ${channel||'WhatsApp'}`
   );
   const body = encodeURIComponent(
-    `Hi TalumaFlow,\n\nI process ~${orders||'?'} orders/week.\nChannel: ${channel||'?'}\nCurrent system: ${system||'?'}\n\nI'd like to see a demo.\n\nBest regards`
+    `Hi TaalumaFlow,\n\nI process ~${orders||'?'} orders/week.\nChannel: ${channel||'?'}\nCurrent system: ${system||'?'}\n\nI'd like to see a demo.\n\nBest regards`
   );
   const div = document.createElement('div');
   div.className = 'msg bot';
   div.innerHTML = `<div class="msg-bubble qualifying-cta">
-    <strong style="display:block;margin-bottom:8px">Sounds like TalumaMail could help! 🎯</strong>
+    <strong style="display:block;margin-bottom:8px">Sounds like TaalumaMail could help! 🎯</strong>
     <div style="font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.5">
       I've pre-filled a demo request based on what you've told me:
     </div>
@@ -193,7 +193,7 @@ function makeHandler(msgs, typingEl, input, sendBtn) {
       qStep = 0;
       setTimeout(() => {
         appendMsg(msgs, 'bot', fmt(
-          `I'd love to help figure out if TalumaMail fits your situation — mind if I ask a couple of quick questions? 😊\n\n${QUALIFY_Q[0]}`
+          `I'd love to help figure out if TaalumaMail fits your situation — mind if I ask a couple of quick questions? 😊\n\n${QUALIFY_Q[0]}`
         ));
         sendBtn.disabled = false; input.focus();
       }, 800);
@@ -227,7 +227,7 @@ export function initFloatChat({ panelId, btnId, inputId, sendBtnId, messagesId }
   const closeBtn = document.getElementById('cfp-close-btn');
   if (!panel || !btn || !input || !msgs) return;
 
-  const GREETING_MSG = `Ciao! I'm TalumaFlow's demo assistant. Ask me anything about our products, or try asking in Italian. 🇮🇹`;
+  const GREETING_MSG = `Ciao! I'm TaalumaFlow's demo assistant. Ask me anything about our products, or try asking in Italian. 🇮🇹`;
 
   function resetChat() {
     msgs.innerHTML = '';

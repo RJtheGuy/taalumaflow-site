@@ -1,4 +1,4 @@
-# TalumaFlow website
+# TaalumaFlow website
 
 Static site for [talumaflow.com](https://talumaflow.com), served from the `docs/` folder by GitHub Pages.
 

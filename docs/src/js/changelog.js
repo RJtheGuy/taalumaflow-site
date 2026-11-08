@@ -5,8 +5,8 @@ const CHANGELOG = [
     id: 'erp-waitlist',
     date: '2026-09-18',
     tag: 'new',
-    title: 'Get notified about TalumaERP updates',
-    desc: "Not ready to switch systems yet? Drop your email on the TalumaERP card and we'll keep you posted on new features.",
+    title: 'Get notified about TaalumaERP updates',
+    desc: "Not ready to switch systems yet? Drop your email on the TaalumaERP card and we'll keep you posted on new features.",
   },
   {
     id: 'price-sensitivity-classifier',
