@@ -312,7 +312,7 @@ function renderResult(data, container) {
           <div class="demo-order-ts">${new Date().toLocaleString('en-GB')}</div>
         </div>
         <span class="demo-badge ${isGood ? 'badge-approved' : 'badge-review'}">
-          ${isGood ? '✓ Auto-approved' : '⚠ Needs review'}
+          ${isGood ? '✓ Ready for approval' : '⚠ Needs review'}
         </span>
       </div>
 
