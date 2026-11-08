@@ -1,39 +1,50 @@
-# TaalumaFlow — Website + Public API
+# TalumaFlow website
+
+Static site for [talumaflow.com](https://talumaflow.com), served from the `docs/` folder by GitHub Pages.
 
 ```
-taalumaflow/
-├── frontend/          ← GitHub Pages static site (talumaflow.com)
-│   ├── index.html
-│   ├── CNAME
-│   ├── src/
-│   │   ├── css/main.css
-│   │   └── js/
-│   │       ├── index.js       ← entry point
-│   │       ├── config.js      ← SET BACKEND_URL HERE
-│   │       ├── demo.js        ← extraction demo + CSV dashboard
-│   │       ├── chat.js        ← qualifying chatbot
-│   │       ├── chat-engine.js ← semantic similarity (Transformers.js)
-│   │       ├── rag-kb.js      ← knowledge base
-│   │       ├── particles.js
-│   │       ├── theme.js
-│   │       └── ui.js
-│   └── public/        ← favicon.ico + og-image.png go here
-│
-└── backend/           ← Add these files to your Django backend
-    ├── erp/
-    │   ├── views_public.py    ← 3 public endpoints
-    │   └── urls_public.py     ← URL patterns
-    ├── config_urls_patch.py   ← shows what to add to config/urls.py
-    └── env_additions.txt      ← add these to your .env
+docs/
+├── index.html         ← the single page (SEO meta, JSON-LD, all sections)
+├── CNAME              ← custom domain (talumaflow.com)
+├── favicon.svg        ← site icon
+├── og-image.png       ← 1200x630 social share image
+├── robots.txt
+├── sitemap.xml
+├── render.yaml
+└── src/
+    ├── css/
+    │   ├── main.css
+    │   └── chat-styles.css
+    └── js/
+        ├── index.js         ← entry point
+        ├── config.js        ← BACKEND_URL and public API endpoints
+        ├── pv.js            ← page-view beacon (own script tag, independent of index.js)
+        ├── demo.js          ← extraction demo + CSV dashboard
+        ├── analytics.js     ← analytics widget
+        ├── changelog.js
+        ├── erp-capture.js
+        ├── chat.js          ← qualifying chatbot
+        ├── chat-engine.js   ← semantic similarity (Transformers.js)
+        ├── rag-kb.js        ← chatbot knowledge base
+        ├── pdf-viewer.js
+        ├── sanitize.js
+        ├── particles.js
+        ├── theme.js
+        └── ui.js
 ```
 
-## Setup order
+## Local preview
 
-1. Copy `backend/erp/views_public.py` and `backend/erp/urls_public.py`
-   to your Django backend
-2. Add `path('api/public/', include('erp.urls_public'))` to `config/urls.py`
-3. Add env vars from `backend/env_additions.txt` to your `.env`
-4. Restart Docker: `docker compose restart backend`
-5. Run tunnel: `cloudflared tunnel --url http://localhost:8000`
-6. Paste tunnel URL into `frontend/src/js/config.js` → BACKEND_URL
-7. Push frontend to GitHub → site live at talumaflow.com
+```
+cd docs && python -m http.server 8000
+```
+
+Open http://localhost:8000. The page-view script (`src/js/pv.js`) only fires on the production host (talumaflow.com), so local previews send no tracking data.
+
+## Backend
+
+The backend lives in a separate repository, TaalumaOS, and is served at https://api.talumaflow.com. The site reads its address from `BACKEND_URL` in `docs/src/js/config.js`.
+
+## Deploying
+
+Push to `main`; GitHub Pages serves `docs/` at talumaflow.com.
