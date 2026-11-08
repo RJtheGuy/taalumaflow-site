@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initCounters([
     { id: 'cnt-1', target: 10, duration: 1200 },
     { id: 'cnt-2', target: 40, duration: 1800 },
-    { id: 'cnt-3', target: 9,  duration: 1400 },
+    { id: 'cnt-3', target: 3,  duration: 1400 },
   ]);
 
   initChartPeriods('.cp-btn');

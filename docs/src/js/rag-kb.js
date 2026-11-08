@@ -29,7 +29,7 @@ export const KB = [
     ],
     keywords: ['taalumamail', 'talumamail', 'mail', 'order', 'ordine', 'whatsapp',
                'fattura', 'invoice', 'preventivo', 'extraction', 'pdf'],
-    answer: `TaalumaMail is our flagship product ✉️\n\nYour clients send orders by WhatsApp or email — in any format, even informal Italian. TaalumaMail:\n\n• Reads the message and extracts every item, quantity, and price\n• Drafts the Fattura or Preventivo PDF in seconds\n• You review and approve it before anything goes to the client\n• Runs entirely on your server — no data leaves your network\n• Connects to Odoo, SAP, or any ERP\n\nAverage time: message → draft document in under 10 seconds.`,
+    answer: `TaalumaMail is our flagship product ✉️\n\nYour clients send orders by WhatsApp or email — in any format, even informal Italian. TaalumaMail:\n\n• Reads the message and extracts every item, quantity, and price\n• Drafts the Fattura or Preventivo PDF in seconds\n• You review and approve it before anything goes to the client\n• Runs entirely on your server — no data leaves your network\n• ERP connections (Odoo, SAP and others) on request\n\nAverage time: message → draft document in under 10 seconds.`,
   },
   {
     questions: [
@@ -39,7 +39,7 @@ export const KB = [
     ],
     keywords: ['chatbot', 'chat bot', 'bot', 'assistant', 'virtual assistant',
                'ai assistant', 'conversational'],
-    answer: `We build custom AI chatbots trained on your specific business context 🤖\n\nNot a generic assistant — one that knows your products, prices, FAQs, and ordering process.\n\n• Works in Italian, English, or mixed language\n• Deploys on your website, WhatsApp Business, Slack, or Teams\n• Handles questions, qualifies leads, takes simple orders\n\nThis demo you're using right now is exactly what we deliver to clients.`,
+    answer: `We build custom AI chatbots trained on your specific business context 🤖\n\nNot a generic assistant — one that knows your products, prices, FAQs, and ordering process.\n\n• Works in Italian, English, or mixed language\n• Deploys on your website; WhatsApp Business, Slack, or Teams on request\n• Handles questions, qualifies leads, takes simple orders\n\nThis demo you're using right now is exactly what we deliver to clients.`,
   },
   {
     questions: [
