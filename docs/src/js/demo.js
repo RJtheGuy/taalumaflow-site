@@ -504,6 +504,14 @@ function renderResult(data, container) {
         return;
       }
 
+      if (err.message === '403') {
+        btn.disabled = false;
+        btn.textContent = '📤 Send';
+        status.style.color   = 'var(--red,#ef4444)';
+        status.textContent   = 'This result has expired or was already sent — please re-run the extraction and try again.';
+        return;
+      }
+
       // Genuine network/server failure — fall back to mailto
       const items    = (data.items||[]).map(i => `• ${i.qty}x ${i.description} @ €${(+i.unit_price).toFixed(2)}`).join('\n');
       const subtotal = (data.items||[]).reduce((s,i)=>s+(i.qty*i.unit_price),0);
