@@ -105,7 +105,7 @@ export const KB = [
     ],
     keywords: ['contact', 'reach you', 'get in touch', 'call', 'demo request',
                'book a call', 'speak to', 'contattarvi'],
-    answer: `Let's talk 📞\n\n📧 talumaflow@gmail.com\n📱 WhatsApp: +39 328 9741517\n🌍 www.talumaflow.com\n📸 @talumaflow\n\nWe always start with a free 30-minute call — no pitch, just an honest look at whether AI actually helps your process.`,
+    answer: `Let's talk 📞\n\n📧 talumaflow@gmail.com\n📱 WhatsApp: +39 328 9741517\n🌍 talumaflow.com\n📸 @talumaflow\n\nWe always start with a free 30-minute call — no pitch, just an honest look at whether AI actually helps your process.`,
   },
   {
     questions: [
