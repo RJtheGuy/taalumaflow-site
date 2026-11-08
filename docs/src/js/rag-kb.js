@@ -8,7 +8,7 @@ export const KB = [
     ],
     keywords: ['services', 'offer', 'solutions', 'products', 'what do you do',
                'what tools', 'tools', 'capabilities', 'cosa fate'],
-    answer: `TaalumaFlow builds six AI products for businesses:\n\n**TaalumaMail** — reads WhatsApp/email orders and drafts invoices for your approval\n**Custom AI Chatbots** — trained on your products, FAQs, and ordering process\n**Data Dashboards** — live analytics and forecasting from your existing data\n**TaalumaERP** — lightweight ERP for small distributors\n**Process Automation** — document OCR, email routing, data entry\n**Custom AI Solutions** — NLP, forecasting, classification built by data scientists\n\nAll run on your own hardware. Which one is most relevant to your business?`,
+    answer: `TaalumaFlow builds six AI products for businesses:\n\n**TaalumaMail** — reads email orders (WhatsApp on request) and drafts invoices for your approval\n**Custom AI Chatbots** — trained on your products, FAQs, and ordering process\n**Data Dashboards** — live analytics and forecasting from your existing data\n**TaalumaERP** — lightweight ERP for small distributors\n**Process Automation** — document OCR, email routing, data entry\n**Custom AI Solutions** — NLP, forecasting, classification built by data scientists\n\nAll run on your own hardware. Which one is most relevant to your business?`,
   },
   {
     questions: [
@@ -29,7 +29,7 @@ export const KB = [
     ],
     keywords: ['taalumamail', 'talumamail', 'mail', 'order', 'ordine', 'whatsapp',
                'fattura', 'invoice', 'preventivo', 'extraction', 'pdf'],
-    answer: `TaalumaMail is our flagship product ✉️\n\nYour clients send orders by WhatsApp or email — in any format, even informal Italian. TaalumaMail:\n\n• Reads the message and extracts every item, quantity, and price\n• Drafts the Fattura or Preventivo PDF in seconds\n• You review and approve it before anything goes to the client\n• Runs entirely on your server — no data leaves your network\n• ERP connections (Odoo, SAP and others) on request\n\nAverage time: message → draft document in under 10 seconds.`,
+    answer: `TaalumaMail is our flagship product ✉️\n\nYour clients send orders by email, or by WhatsApp on request — in any format, even informal Italian. TaalumaMail:\n\n• Reads the message and extracts every item, quantity, and price\n• Drafts the Fattura or Preventivo PDF in seconds\n• You review and approve it before anything goes to the client\n• Runs entirely on your server — no data leaves your network\n• ERP connections (Odoo, SAP and others) on request\n\nAverage time: message → draft document in under 10 seconds.`,
   },
   {
     questions: [
