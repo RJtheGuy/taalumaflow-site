@@ -972,7 +972,7 @@ function renderDashboard(allRows, dashEl, dropzone, manualCols = null) {
     </div>
 
     <div class="csv-privacy-note">
-      🔒 Your data never left your browser — processed entirely client-side.
+      🔒 Charts you upload stay in your browser; the Data Lab tools process your CSV on our own server and don't store it.
       This is exactly how we build your production dashboards.
     </div>
     <div style="text-align:center;margin-top:20px">
